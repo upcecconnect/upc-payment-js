@@ -1,0 +1,189 @@
+@mixin initialReset {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+$spinnerColor: #e6e600;
+$btnCloseColor: #aaaaaa;
+$modalBgColor: #ffffff;
+
+
+.upc-payment {
+  width: 510px;
+  margin: 0 auto;
+  position: relative;
+  &__iframe-wrapper {
+    @include initialReset;
+    height: 770px;
+  }
+  &__iframe {
+    @include initialReset;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+  &__spinner {
+    @include initialReset;
+    display: inline-block;
+    position: absolute;
+    left: 40%;
+    top: 40%;
+    width: 80px;
+    height: 80px;
+    &.invisible {
+      display: none;
+    }
+    & div {
+      @include initialReset;
+      display: block;
+      position: absolute;
+      width: 64px;
+      height: 64px;
+      margin: 8px;
+      border-top-width: 8px;
+      border-right-width: 8px;
+      border-bottom-width: 8px;
+      border-left-width: 8px;
+      border-top-style: solid;
+      border-right-style: solid;
+      border-bottom-style: solid;
+      border-left-style: solid;
+      border-radius: 50%;
+      animation: spinner-animation 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+      border-color: $spinnerColor transparent transparent transparent;
+    }
+    & div:nth-child(1) {
+      animation-delay: -0.45s;
+    }
+    & div:nth-child(2) {
+      animation-delay: -0.3s;
+    }
+    & div:nth-child(3) {
+      animation-delay: -0.15s;
+    }
+  }
+}
+
+.upc-payment-modal {
+  @include initialReset;
+  &__modal-background {
+    @include initialReset;
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,.62);
+    transition-duration: 0.3s;
+    transition-property: all;
+    overflow-y: auto;
+    z-index: 100500;
+    opacity: 0;
+  }
+  &__modal-window {
+    @include initialReset;
+    background-color: $modalBgColor;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,.5);
+    font-weight: 400;
+    margin-bottom: 30px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 50px;
+    max-width: 100%;
+    min-height: 300px;
+    min-width: 280px;
+    padding-bottom: 15px;
+    padding-left: 15px;
+    padding-right: 15px;
+    padding-top: 15px;
+    width: 480px;
+    transition-duration: 0.3s;
+    transition-property: all;
+    cursor: initial;
+    opacity: 0;
+    transform: translateY(-30%);
+  }
+  &__btn-close {
+    @include initialReset;
+    border: none;
+    color: $btnCloseColor;
+    cursor: pointer;
+    font-size: 32px;
+    font-weight: 300;
+    height: 32px;
+    position: absolute;
+    right: 4px;
+    text-align: center;
+    top: 0;
+    width: 32px;
+    z-index: 1000;
+  }
+  &__iframe-wrapper {
+    @include initialReset;
+    height: 770px;
+  }
+  &__iframe {
+    @include initialReset;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+  &__spinner {
+    @include initialReset;
+    display: inline-block;
+    position: absolute;
+    left: 40%;
+    top: 40%;
+    width: 80px;
+    height: 80px;
+    &.invisible {
+      display: none;
+    }
+    & div {
+      @include initialReset;
+      display: block;
+      position: absolute;
+      width: 64px;
+      height: 64px;
+      margin: 8px;
+      border-top-width: 8px;
+      border-right-width: 8px;
+      border-bottom-width: 8px;
+      border-left-width: 8px;
+      border-top-style: solid;
+      border-right-style: solid;
+      border-bottom-style: solid;
+      border-left-style: solid;
+      border-radius: 50%;
+      animation: spinner-animation 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+      border-color: $spinnerColor transparent transparent transparent;
+    }
+    & div:nth-child(1) {
+      animation-delay: -0.45s;
+    }
+    & div:nth-child(2) {
+      animation-delay: -0.3s;
+    }
+    & div:nth-child(3) {
+      animation-delay: -0.15s;
+    }
+  }
+  &.visible &__modal-background {
+    opacity: 1;
+  }
+  &.visible &__modal-window {
+    opacity: 1;
+    transform: translateY(0%);
+  }
+}
+
+@keyframes spinner-animation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
