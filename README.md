@@ -30,7 +30,7 @@ const payment = new UpcPayment({
     terminalId: 'A012345',
     signature: 'signature',
     currency: 980,
-    paymentUrl: 'https://ecconnect.com.ua/',
+    paymentUrl: 'https://ecconnect.upc.ua/',
     locale: 'en',
     mode: UpcPaymentMode.ModalIframe,
   },
