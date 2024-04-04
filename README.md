@@ -1,14 +1,14 @@
 <h1 align="center">
    <b>
-        <a href="https://ecconnect.com.ua/"><img src="https://ecconnect.com.ua/public/images/newLogo.svg" /></a><br>
+        <a href="https://ecconnect.upc.ua/"><img src="https://ecconnect.upc.ua/public/images/newLogo.svg" /></a><br>
     </b>
 </h1>
 
 <p align="center">upc-payment-js allows to initiate and process a payment in a separate browser tab or within an iframe directly on the website</p>
 
 <p align="center">
-    <a href="https://ecconnect.com.ua/"><b>Website</b></a> •
-    <a href="https://docs.ecconnect.com.ua/"><b>Documentation</b></a>
+    <a href="https://ecconnect.upc.ua/"><b>Website</b></a> •
+    <a href="https://docs.ecconnect.upc.ua/"><b>Documentation</b></a>
 </p> 
 
 ### Installing
@@ -56,7 +56,7 @@ payment.pay({
 Using link:
 
 ```html
-<script src="https://ecconnect.com.ua/pub/utils/upc-payment-sdk/upc-payment-js.js"></script>
+<script src="https://ecconnect.upc.ua/pub/utils/upc-payment-sdk/upc-payment-js.js"></script>
 ```
 
 
@@ -68,7 +68,7 @@ if (window.UpcPayment) {
       terminalId: 'A012345',
       signature: 'signature',
       currency: 980,
-      paymentUrl: 'https://ecconnect.com.ua/',
+      paymentUrl: 'https://ecconnect.upc.ua/',
       locale: 'en',
       mode: 'ModalIframe',
     },
