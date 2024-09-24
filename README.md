@@ -1,14 +1,16 @@
 <h1 align="center">
    <b>
-        <a href="https://ecconnect.upc.ua/"><img src="https://ecconnect.upc.ua/public/images/newLogo.svg" /></a><br>
+      <a href="https://ecconnect.upc.ua/">
+        <img src="https://ecconnect.upc.ua/public/images/newLogo.svg" />
+      </a>
     </b>
 </h1>
 
 <p align="center">upc-payment-js allows to initiate and process a payment in a separate browser tab or within an iframe directly on the website</p>
 
 <p align="center">
-    <a href="https://ecconnect.upc.ua/"><b>Website</b></a> •
-    <a href="https://docs.ecconnect.upc.ua/"><b>Documentation</b></a>
+  <a href="https://ecconnect.upc.ua/"><b>Website</b></a> •
+  <a href="https://docs.ecconnect.upc.ua/"><b>Documentation</b></a>
 </p> 
 
 ### Installing
@@ -16,39 +18,49 @@
 ```bash
 $ npm install upc-payment-js
 ```
+### Types and available payment parameters
+https://github.com/upcecconnect/upc-payment-js/blob/main/dist/es/upc-payment-js.d.ts
 
-## Example
+
+### Demo-shop with examples of usage
+https://upcecconnect.github.io/fake-shop
+
+### Demo-shop (repo) with examples of usage
+https://github.com/upcecconnect/fake-shop
+
+### Example
 
 Once the package is installed, you can import the library using `import` or `require` approach:
 
 ```js
-import { UpcPayment, UpcPaymentMode } from 'upc-payment-js';
+import { UpcPayment } from 'upc-payment-js';
 
 const payment = new UpcPayment({
-  commonProps: {
-    merchantId: '012345',
+  merchant: {
+    id: '012345',
     terminalId: 'A012345',
-    signature: 'signature',
-    currency: 980,
-    paymentUrl: 'https://ecconnect.upc.ua/',
-    locale: 'en',
-    mode: UpcPaymentMode.ModalIframe,
+    signature: 'Signature',
+  },
+  customer: {
+    email: '',
+    firstName: '',
+    lastName: '',
+    phoneCountryCode: '380',
+    phoneNumber: '001234567',
   },
   iframeProps: {
-    onSuccessPayment: () => {},
-    onFailurePayment: () => {},
-    onGoBackToSiteButtonClick: () => {},
-    onPayMoreButtonClick: () => {},
+    wrapperSelector: '#some-wrapper-id',
+    callback: (data) => callbackHandler(data),
   },
 });
 
 payment.pay({
-  orderId: 'orderId',
+  currencyNumericCode: '980',
   description: 'description',
+  orderId: 'orderId',
   purchaseTime: 1678436363678,
-  totalAmount: 1000,
-})
-
+  totalAmountCents: 12345,
+});
 ```
 
 ### OR
@@ -56,39 +68,23 @@ payment.pay({
 Using link:
 
 ```html
-<script src="https://ecconnect.upc.ua/pub/utils/upc-payment-sdk/upc-payment-js.js"></script>
+<script src="https://raw.githubusercontent.com/upcecconnect/upc-payment-js/refs/heads/main/dist/iife/upc-payment-js.js"></script>
 ```
+Or download and use lib directly
 
+https://github.com/upcecconnect/upc-payment-js/blob/main/dist/iife/upc-payment.js
 
 ```js
 if (window.UpcPayment) {
   const payment = new UpcPayment({
-    commonProps: {
-      merchantId: '012345',
-      terminalId: 'A012345',
-      signature: 'signature',
-      currency: 980,
-      paymentUrl: 'https://ecconnect.upc.ua/',
-      locale: 'en',
-      mode: 'ModalIframe',
-    },
-    iframeProps: {
-      onSuccessPayment: () => {},
-      onFailurePayment: () => {},
-      onGoBackToSiteButtonClick: () => {},
-      onPayMoreButtonClick: () => {},
-    },
+    // ...
   });
-
   payment.pay({
-    orderId: 'orderId',
-    description: 'description',
-    purchaseTime: 1678436363678,
-    totalAmount: 1000,
-  })
+    //...
+  });
 }
 ```
 
-## License
+### License
 
 [MIT](LICENSE)

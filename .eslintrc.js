@@ -125,6 +125,9 @@ module.exports = {
       "@typescript-eslint/ban-ts-comment": "off",
       "@typescript-eslint/prefer-ts-expect-error": "off",
       "lines-around-comment": "off",
+      "@typescript-eslint/strict-boolean-expressions": "off",
+      "@typescript-eslint/prefer-includes": "off",
+      "@typescript-eslint/prefer-nullish-coalescing": "off",
       "@typescript-eslint/ban-tslint-comment": "off",
       "@typescript-eslint/consistent-indexed-object-style": "off",
       "max-lines-per-function": "off",
@@ -172,7 +175,8 @@ module.exports = {
       "no-bitwise": "off",
       "sort-vars": "off",
       "@typescript-eslint/restrict-template-expressions": "warn",
-      "@typescript-eslint/no-unnecessary-condition": "warn",
-      "comma-dangle": "off"
+      "@typescript-eslint/no-unnecessary-condition": "off",
+      "comma-dangle": "off",
+      "class-methods-use-this": "off",
   }
 }
