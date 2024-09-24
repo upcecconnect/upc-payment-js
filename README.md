@@ -72,7 +72,7 @@ Using link:
 ```
 Or download and use lib directly
 
-https://github.com/upcecconnect/upc-payment-js/blob/main/dist/iife/upc-payment.js
+https://github.com/upcecconnect/upc-payment-js/blob/main/dist/iife/upc-payment-js.js
 
 ```js
 if (window.UpcPayment) {
