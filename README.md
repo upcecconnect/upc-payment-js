@@ -58,7 +58,8 @@ payment.pay({
   currencyNumericCode: '980',
   description: 'description',
   orderId: 'orderId',
-  purchaseTime: 1678436363678,
+  // yymmddhhmmss
+  purchaseTime: '241231235959',
   totalAmountCents: 12345,
 });
 ```

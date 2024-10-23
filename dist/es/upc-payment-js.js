@@ -1,10 +1,10 @@
-class d {
+class p {
   constructor(e) {
     const r = ["PaymentIframe", "PaymentModalIframe", "PaymentPage"];
     e.mode && r.includes(e.mode) ? this.mode = e.mode : this.mode = "PaymentPage", this.validateMerchantData(e.merchant), this.merchant = e.merchant, this.validateCustomerData(e.customer), this.customer = e.customer, this.validateIframeProps(e.iframeProps), this.iframeProps = e.iframeProps;
   }
   pay(e) {
-    var s, a, l, h;
+    var s, a, l, d;
     const r = this.getPaymentForm(e);
     if (this.validatePaymentData(e), this.mode === "PaymentPage") {
       document.body.appendChild(r), r.submit();
@@ -26,7 +26,7 @@ class d {
         m.remove();
       }), (l = m.querySelector("main")) == null || l.appendChild(i), document.body.appendChild(m);
     }
-    (h = i.contentWindow) == null || h.document.body.appendChild(r), r.submit();
+    (d = i.contentWindow) == null || d.document.body.appendChild(r), r.submit();
   }
   validateMerchantData(e) {
     if (typeof e.id != "string" || !e.id)
@@ -89,7 +89,7 @@ class d {
       throw new Error('Field "payment.locale" is invalid');
     if (typeof e.orderId != "string" || !e.orderId)
       throw new Error('Field "payment.orderId" is invalid');
-    if (typeof e.purchaseTime != "number" || !e.purchaseTime)
+    if (!e.purchaseTime)
       throw new Error('Field "payment.purchaseTime" is invalid');
     if (e.token && typeof e.token != "string")
       throw new Error('Field "payment.token" is invalid');
@@ -107,7 +107,7 @@ class d {
     const r = e.url || "https://ecg.test.upc.ua/go/pay", t = document.createElement("form");
     t.setAttribute("action", r), t.setAttribute("method", "POST"), t.style.visibility = "hidden", this.mode === "PaymentPage" && t.setAttribute("target", "_blank");
     const n = document.createElement("meta");
-    return n.setAttribute("http-equiv", "Content-Type"), n.setAttribute("content", "text/html; charset=utf-8"), t.appendChild(n), t.appendChild(this.getInputEl("MerchantID", this.merchant.id)), t.appendChild(this.getInputEl("TerminalID", this.merchant.terminalId)), t.appendChild(this.getInputEl("Signature", this.merchant.signature)), e.altTotalAmountCents && t.appendChild(this.getInputEl("AltTotalAmount", e.altTotalAmountCents.toString())), e.altCurrencyNumericCode && t.appendChild(this.getInputEl("AltCurrency", e.altCurrencyNumericCode)), e.altFeeCents && t.appendChild(this.getInputEl("AltFee", e.altFeeCents.toString())), t.appendChild(this.getInputEl("Currency", e.currencyNumericCode)), e.delay && t.appendChild(this.getInputEl("delay", e.delay.toString())), t.appendChild(this.getInputEl("PurchaseDesc", e.description)), e.feeCents && t.appendChild(this.getInputEl("Fee", e.feeCents.toString())), e.locale && t.appendChild(this.getInputEl("locale", e.locale)), t.appendChild(this.getInputEl("OrderID", e.orderId)), e.purchaseTime && t.appendChild(this.getInputEl("PurchaseTime", e.purchaseTime.toString())), e.token && t.appendChild(this.getInputEl("UPCToken", e.token)), t.appendChild(this.getInputEl("TotalAmount", e.totalAmountCents.toString())), (o = this.customer) != null && o.email && t.appendChild(this.getInputEl("email", this.customer.email)), (i = this.customer) != null && i.phoneCountryCode && t.appendChild(this.getInputEl("phoneCountryCode", this.customer.phoneCountryCode)), (s = this.customer) != null && s.phoneNumber && t.appendChild(this.getInputEl("phoneNumber", this.customer.phoneNumber)), (a = this.customer) != null && a.firstName && t.appendChild(this.getInputEl("consumerFirstName", this.customer.firstName)), (l = this.customer) != null && l.lastName && t.appendChild(this.getInputEl("consumerLastName", this.customer.lastName)), t;
+    return n.setAttribute("http-equiv", "Content-Type"), n.setAttribute("content", "text/html; charset=utf-8"), t.appendChild(n), t.appendChild(this.getInputEl("MerchantID", this.merchant.id)), t.appendChild(this.getInputEl("TerminalID", this.merchant.terminalId)), t.appendChild(this.getInputEl("Signature", this.merchant.signature)), e.altTotalAmountCents && t.appendChild(this.getInputEl("AltTotalAmount", e.altTotalAmountCents.toString())), e.altCurrencyNumericCode && t.appendChild(this.getInputEl("AltCurrency", e.altCurrencyNumericCode)), e.altFeeCents && t.appendChild(this.getInputEl("AltFee", e.altFeeCents.toString())), t.appendChild(this.getInputEl("Currency", e.currencyNumericCode)), e.delay && t.appendChild(this.getInputEl("delay", e.delay.toString())), t.appendChild(this.getInputEl("PurchaseDesc", e.description)), e.feeCents && t.appendChild(this.getInputEl("Fee", e.feeCents.toString())), e.locale && t.appendChild(this.getInputEl("locale", e.locale)), t.appendChild(this.getInputEl("OrderID", e.orderId)), t.appendChild(this.getInputEl("PurchaseTime", String(e.purchaseTime))), e.token && t.appendChild(this.getInputEl("UPCToken", e.token)), t.appendChild(this.getInputEl("TotalAmount", e.totalAmountCents.toString())), (o = this.customer) != null && o.email && t.appendChild(this.getInputEl("email", this.customer.email)), (i = this.customer) != null && i.phoneCountryCode && t.appendChild(this.getInputEl("phoneCountryCode", this.customer.phoneCountryCode)), (s = this.customer) != null && s.phoneNumber && t.appendChild(this.getInputEl("phoneNumber", this.customer.phoneNumber)), (a = this.customer) != null && a.firstName && t.appendChild(this.getInputEl("consumerFirstName", this.customer.firstName)), (l = this.customer) != null && l.lastName && t.appendChild(this.getInputEl("consumerLastName", this.customer.lastName)), t;
   }
   setMessageListener() {
     const e = (r) => {
@@ -222,5 +222,5 @@ class d {
   }
 }
 export {
-  d as UpcPayment
+  p as UpcPayment
 };

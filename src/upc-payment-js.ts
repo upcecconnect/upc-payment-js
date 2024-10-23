@@ -44,7 +44,7 @@ interface PaymentData {
   readonly feeCents?: number|undefined;
   readonly locale?: string|undefined;
   readonly orderId: string;
-  readonly purchaseTime: number;
+  readonly purchaseTime: string;
   readonly token?: string|undefined;
   readonly totalAmountCents: number;
   readonly url?: string|undefined;
@@ -223,7 +223,7 @@ export class UpcPayment implements IUpcPayment {
     if (typeof data.orderId !== 'string' || !data.orderId) {
       throw new Error('Field "payment.orderId" is invalid');
     }
-    if (typeof data.purchaseTime !== 'number' || !data.purchaseTime) {
+    if (!data.purchaseTime) {
       throw new Error('Field "payment.purchaseTime" is invalid');
     }
     if (data.token && typeof data.token !== 'string') {
@@ -284,9 +284,7 @@ export class UpcPayment implements IUpcPayment {
       form.appendChild(this.getInputEl('locale', data.locale));
     }
     form.appendChild(this.getInputEl('OrderID', data.orderId));
-    if (data.purchaseTime) {
-      form.appendChild(this.getInputEl('PurchaseTime', data.purchaseTime.toString()));
-    }
+    form.appendChild(this.getInputEl('PurchaseTime', String(data.purchaseTime)));
     if (data.token) {
       form.appendChild(this.getInputEl('UPCToken', data.token));
     }

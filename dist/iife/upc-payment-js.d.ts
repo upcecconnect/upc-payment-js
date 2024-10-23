@@ -25,7 +25,7 @@ interface PaymentData {
     readonly feeCents?: number | undefined;
     readonly locale?: string | undefined;
     readonly orderId: string;
-    readonly purchaseTime: number;
+    readonly purchaseTime: string;
     readonly token?: string | undefined;
     readonly totalAmountCents: number;
     readonly url?: string | undefined;
