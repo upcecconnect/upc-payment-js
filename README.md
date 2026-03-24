@@ -90,7 +90,9 @@ if (window.UpcPayment) {
 }
 ```
 
-## Version 2.0.0
+---
+
+## Update in Version 2.0.0
 
 - [x] З'явився новий параметр ініціалізації `paymentPageTarget` для вибору способу відкриття сторінки оплати якщо `mode = 'PaymentPage'`. Можливі значення `_self` або `_blank`. За замовчуванням використовується `_self`.
 - [x] `mode` може мати значення `PaymentPage`, `PaymentIframe`, `PaymentModalIframe`. За замовчуванням використовується `PaymentPage`.
