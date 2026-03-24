@@ -1,6 +1,6 @@
 {
   "name": "upc-payment-js",
-  "version": "1.0.2",
+  "version": "2.0.0",
   "description": "upc-payment-js allows to initiate and process a payment in a separate browser tab or within an iframe directly on the website",
   "main": "./dist/umd/upc-payment-js.umd.cjs",
   "module": "./dist/es/upc-payment-js.js",
@@ -12,10 +12,11 @@
   },
   "type": "module",
   "engines": {
-    "node": ">=20.10.0"
+    "node": ">=24.10.0"
   },
   "scripts": {
     "dev": "vite",
+    "check-types": "tsc --noEmit",
     "build": "tsc && vite build --mode iife && vite build --mode es && vite build --mode umd"
   },
   "repository": {
@@ -36,12 +37,14 @@
     "eslint": "^9.39.1",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-promise": "^7.2.1",
+    "oxlint": "^1.56.0",
     "typescript": "^5.9.3",
     "vite": "^8.0.2",
     "vite-plugin-dts": "^4.5.4"
   },
   "files": [
     "dist/es",
-    "dist/umd"
+    "dist/umd",
+    "dist/iife"
   ]
 }

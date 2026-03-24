@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UPC Payment Example</title>
+    <style>
+      :root {
+        --bg: #f4f7fb;
+        --panel: #ffffff;
+        --text: #182235;
+        --muted: #5b667a;
+        --accent: #1163ff;
+        --accent-strong: #0a43b8;
+        --border: #d9e1ee;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at 12% 14%, #deebff 0, transparent 32%),
+          radial-gradient(circle at 88% 86%, #dae4ff 0, transparent 36%),
+          var(--bg);
+        min-height: 100vh;
+      }
+
+      .page {
+        width: min(980px, calc(100% - 32px));
+        margin: 24px auto;
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: 0 14px 40px rgba(15, 37, 81, 0.08);
+        padding: 20px;
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        font-size: 28px;
+      }
+
+      p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .grid {
+        margin-top: 18px;
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .field label {
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .field input,
+      .field select {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 10px;
+        font-size: 14px;
+        color: var(--text);
+      }
+
+      .actions {
+        margin-top: 14px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        border: 0;
+        border-radius: 10px;
+        padding: 11px 14px;
+        color: #fff;
+        background: linear-gradient(
+          135deg,
+          var(--accent),
+          var(--accent-strong)
+        );
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      button.secondary {
+        background: #2d3a55;
+      }
+
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .hint {
+        margin-top: 12px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      #embeddedWrapper {
+        margin-top: 20px;
+        min-height: 360px;
+        border: 2px dashed #b9c8e8;
+        border-radius: 14px;
+        background: #f9fbff;
+        padding: 10px;
+      }
+
+      .log {
+        margin-top: 14px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 10px;
+        background: #f7f9fd;
+        max-height: 220px;
+        overflow: auto;
+        font-size: 13px;
+        line-height: 1.4;
+      }
+
+      @media (max-width: 760px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section class="card">
+        <h1>UPC Payment Usage Example</h1>
+        <p>
+          Demo for PaymentPage, PaymentIframe and PaymentModalIframe with the
+          current library API.
+        </p>
+
+        <div class="grid">
+          <div class="field">
+            <label for="merchantId">Merchant ID</label>
+            <input id="merchantId" value="012345" />
+          </div>
+          <div class="field">
+            <label for="terminalId">Terminal ID</label>
+            <input id="terminalId" value="A012345" />
+          </div>
+          <div class="field">
+            <label for="signature">Signature</label>
+            <input id="signature" value="signature-placeholder" />
+          </div>
+          <div class="field">
+            <label for="checkoutUrl">Checkout URL</label>
+            <input id="checkoutUrl" value="https://ecg.test.upc.ua/go/pay" />
+          </div>
+          <div class="field">
+            <label for="orderId">Order ID</label>
+            <input id="orderId" value="ORDER-12345" />
+          </div>
+          <div class="field">
+            <label for="amount">Amount (cents)</label>
+            <input id="amount" value="100" type="number" min="1" />
+          </div>
+          <div class="field">
+            <label for="description">Description</label>
+            <input id="description" value="Test payment from example" />
+          </div>
+          <div class="field">
+            <label for="paymentPageTarget">PaymentPage target</label>
+            <select id="paymentPageTarget">
+              <option value="_self" selected>
+                _self (recommended, no popup)
+              </option>
+              <option value="_blank">_blank (new tab/window)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="btnPage">Pay: PaymentPage</button>
+          <button id="btnIframe" class="secondary">Pay: PaymentIframe</button>
+          <button id="btnModal" class="secondary">
+            Pay: PaymentModalIframe
+          </button>
+          <button id="btnClearLog" class="secondary">Clear log</button>
+        </div>
+
+        <div class="hint">
+          Note: for real transaction use valid merchant/signature values from
+          backend.
+        </div>
+
+        <div id="embeddedWrapper" aria-label="iframe wrapper"></div>
+        <div id="log" class="log" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <script src="../dist/iife/upc-payment-js.js"></script>
+    <script>
+      (function () {
+        var logEl = document.getElementById('log');
+        var wrapperSelector = '#embeddedWrapper';
+
+        function addLog(message) {
+          var time = new Date().toLocaleTimeString();
+          var line = document.createElement('div');
+          line.textContent = '[' + time + '] ' + message;
+          logEl.prepend(line);
+        }
+
+        function currentPurchaseTime() {
+          var now = new Date();
+          var yy = String(now.getFullYear()).slice(-2);
+          var MM = String(now.getMonth() + 1).padStart(2, '0');
+          var dd = String(now.getDate()).padStart(2, '0');
+          var hh = String(now.getHours()).padStart(2, '0');
+          var mm = String(now.getMinutes()).padStart(2, '0');
+          var ss = String(now.getSeconds()).padStart(2, '0');
+          return yy + MM + dd + hh + mm + ss;
+        }
+
+        function readValue(id) {
+          return document.getElementById(id).value.trim();
+        }
+
+        function createPayment(mode) {
+          if (!window.UpcPayment) {
+            throw new Error('window.UpcPayment is not available');
+          }
+
+          return new window.UpcPayment({
+            mode: mode,
+            merchant: {
+              id: readValue('merchantId'),
+              terminalId: readValue('terminalId'),
+              signature: readValue('signature'),
+            },
+            iframeProps: {
+              wrapperSelector: wrapperSelector,
+              callback: function (data) {
+                addLog('iframe callback: ' + JSON.stringify(data));
+              },
+            },
+            paymentPageTarget: readValue('paymentPageTarget'),
+          });
+        }
+
+        function pay(mode) {
+          try {
+            var payment = createPayment(mode);
+            payment.pay({
+              currencyNumericCode: '980',
+              description: readValue('description'),
+              orderId: readValue('orderId'),
+              purchaseTime: currentPurchaseTime(),
+              totalAmountCents: Number(readValue('amount')),
+              url: readValue('checkoutUrl'),
+              locale: 'uk-UA',
+            });
+
+            addLog('pay() called with mode=' + mode);
+          } catch (error) {
+            var message =
+              error instanceof Error ? error.message : String(error);
+            addLog('ERROR: ' + message);
+          }
+        }
+
+        document
+          .getElementById('btnPage')
+          .addEventListener('click', function () {
+            pay('PaymentPage');
+          });
+        document
+          .getElementById('btnIframe')
+          .addEventListener('click', function () {
+            pay('PaymentIframe');
+          });
+        document
+          .getElementById('btnModal')
+          .addEventListener('click', function () {
+            pay('PaymentModalIframe');
+          });
+        document
+          .getElementById('btnClearLog')
+          .addEventListener('click', function () {
+            logEl.innerHTML = '';
+          });
+
+        addLog('Example loaded');
+      })();
+    </script>
+  </body>
+</html>

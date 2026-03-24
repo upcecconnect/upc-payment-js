@@ -3,14 +3,22 @@ import { UserConfig } from 'vite';
 import { resolve } from 'path';
 import dts from 'vite-plugin-dts';
 
-export default defineConfig((config: UserConfig): UserConfig => {
-  if (config.mode === 'iife') {
+export default defineConfig(({ command, mode }): UserConfig => {
+  if (command === 'serve') {
+    return {
+      server: {
+        open: '/example/index.html',
+      },
+    };
+  }
+
+  if (mode === 'iife') {
     return {
       build: {
         rollupOptions: {
           input: resolve(__dirname, 'src/upc-payment-js.ts'),
           output: {
-            dir: resolve(__dirname, "dist", "iife"),
+            dir: resolve(__dirname, 'dist', 'iife'),
             entryFileNames: 'upc-payment-js.js',
             esModule: false,
             format: 'iife',
@@ -19,12 +27,12 @@ export default defineConfig((config: UserConfig): UserConfig => {
       },
       plugins: [
         dts({
-          outDir: resolve(__dirname, "dist", "iife"),
+          outDir: resolve(__dirname, 'dist', 'iife'),
         }),
       ],
-    }
+    };
   }
-  if (config.mode === 'es') {
+  if (mode === 'es') {
     return {
       build: {
         lib: {
@@ -35,16 +43,16 @@ export default defineConfig((config: UserConfig): UserConfig => {
         },
         rollupOptions: {
           output: {
-            dir: resolve(__dirname, "dist", "es"),
+            dir: resolve(__dirname, 'dist', 'es'),
           },
         },
       },
       plugins: [
         dts({
-          outDir: resolve(__dirname, "dist", "es"),
+          outDir: resolve(__dirname, 'dist', 'es'),
         }),
       ],
-    }
+    };
   }
   return {
     build: {
@@ -56,19 +64,22 @@ export default defineConfig((config: UserConfig): UserConfig => {
       },
       rollupOptions: {
         output: {
-          dir: resolve(__dirname, "dist", "umd"),
+          dir: resolve(__dirname, 'dist', 'umd'),
         },
       },
     },
     plugins: [
       dts({
-        outDir: resolve(__dirname, "dist", "umd"),
+        outDir: resolve(__dirname, 'dist', 'umd'),
         beforeWriteFile(filePath, content) {
           return {
-            filePath: filePath.replace('upc-payment-js.d.ts', 'upc-payment-js.umd.cjs.d.ts'),
-          }
+            filePath: filePath.replace(
+              'upc-payment-js.d.ts',
+              'upc-payment-js.umd.cjs.d.ts',
+            ),
+          };
         },
       }),
     ],
-  }
+  };
 });

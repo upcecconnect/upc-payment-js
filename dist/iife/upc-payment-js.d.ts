@@ -42,6 +42,7 @@ interface IUpcPaymentProps {
     readonly merchant: MerchantData;
     readonly customer?: CustomerData | undefined;
     readonly iframeProps?: IframeProps | undefined;
+    readonly paymentPageTarget?: '_self' | '_blank' | undefined;
 }
 interface IUpcPayment extends IUpcPaymentProps {
     pay: (data: PaymentData) => void;
@@ -51,6 +52,7 @@ export declare class UpcPayment implements IUpcPayment {
     readonly merchant: MerchantData;
     readonly customer: CustomerData | undefined;
     readonly iframeProps: IframeProps | undefined;
+    readonly paymentPageTarget: "_self" | "_blank";
     constructor(props: IUpcPaymentProps);
     pay(data: PaymentData): void;
     private validateMerchantData;

@@ -1,11 +1,9 @@
 type MessageFromPaymentPage =
-  'AppLoaded' |
-  'Failure' |
-  'GoBackToSite' |
-  'Success' |
-  'TryAgain'
-;
-
+  | 'AppLoaded'
+  | 'Failure'
+  | 'GoBackToSite'
+  | 'Success'
+  | 'TryAgain';
 
 interface EventMessageFromPaymentPage {
   readonly from: string;
@@ -15,7 +13,7 @@ interface EventMessageFromPaymentPage {
 }
 
 export interface PaymentIframeCallbackData {
-  readonly event: 'loaded'|'failure'|'success'|'go-back'|'try-again';
+  readonly event: 'loaded' | 'failure' | 'success' | 'go-back' | 'try-again';
   readonly data: {
     readonly height: number;
     readonly width: number;
@@ -24,7 +22,7 @@ export interface PaymentIframeCallbackData {
 type CallbackFunction = (callbackData: PaymentIframeCallbackData) => void;
 
 interface IframeProps {
-  readonly wrapperSelector?: string|undefined;
+  readonly wrapperSelector?: string | undefined;
   readonly callback?: CallbackFunction;
 }
 
@@ -35,34 +33,39 @@ interface MerchantData {
 }
 
 interface PaymentData {
-  readonly altCurrencyNumericCode?: string|undefined;
-  readonly altFeeCents?: number|undefined;
-  readonly altTotalAmountCents?: number|undefined;
+  readonly altCurrencyNumericCode?: string | undefined;
+  readonly altFeeCents?: number | undefined;
+  readonly altTotalAmountCents?: number | undefined;
   readonly currencyNumericCode: string;
-  readonly delay?: number|undefined;
+  readonly delay?: number | undefined;
   readonly description: string;
-  readonly feeCents?: number|undefined;
-  readonly locale?: string|undefined;
+  readonly feeCents?: number | undefined;
+  readonly locale?: string | undefined;
   readonly orderId: string;
   readonly purchaseTime: string;
-  readonly token?: string|undefined;
+  readonly token?: string | undefined;
   readonly totalAmountCents: number;
-  readonly url?: string|undefined;
+  readonly url?: string | undefined;
 }
 
 interface CustomerData {
-  readonly email?: string|undefined;
-  readonly phoneCountryCode?: string|undefined;
-  readonly phoneNumber?: string|undefined;
-  readonly firstName?: string|undefined;
-  readonly lastName?: string|undefined;
+  readonly email?: string | undefined;
+  readonly phoneCountryCode?: string | undefined;
+  readonly phoneNumber?: string | undefined;
+  readonly firstName?: string | undefined;
+  readonly lastName?: string | undefined;
 }
 
 interface IUpcPaymentProps {
-  readonly mode?: 'PaymentIframe'|'PaymentModalIframe'|'PaymentPage'|undefined;
+  readonly mode?:
+    | 'PaymentIframe'
+    | 'PaymentModalIframe'
+    | 'PaymentPage'
+    | undefined;
   readonly merchant: MerchantData;
-  readonly customer?: CustomerData|undefined;
-  readonly iframeProps?: IframeProps|undefined;
+  readonly customer?: CustomerData | undefined;
+  readonly iframeProps?: IframeProps | undefined;
+  readonly paymentPageTarget?: '_self' | '_blank' | undefined;
 }
 
 interface IUpcPayment extends IUpcPaymentProps {
@@ -74,9 +77,14 @@ export class UpcPayment implements IUpcPayment {
   public readonly merchant;
   public readonly customer;
   public readonly iframeProps;
+  public readonly paymentPageTarget;
 
   public constructor(props: IUpcPaymentProps) {
-    const availableModes: IUpcPaymentProps['mode'][] = ['PaymentIframe', 'PaymentModalIframe', 'PaymentPage'];
+    const availableModes: IUpcPaymentProps['mode'][] = [
+      'PaymentIframe',
+      'PaymentModalIframe',
+      'PaymentPage',
+    ];
     if (props.mode && availableModes.includes(props.mode)) {
       this.mode = props.mode;
     } else {
@@ -88,6 +96,18 @@ export class UpcPayment implements IUpcPayment {
     this.customer = props.customer;
     this.validateIframeProps(props.iframeProps);
     this.iframeProps = props.iframeProps;
+    const availableTargets: IUpcPaymentProps['paymentPageTarget'][] = [
+      '_self',
+      '_blank',
+    ];
+    if (
+      props.paymentPageTarget &&
+      availableTargets.includes(props.paymentPageTarget)
+    ) {
+      this.paymentPageTarget = props.paymentPageTarget;
+    } else {
+      this.paymentPageTarget = '_self' as const;
+    }
   }
 
   public pay(data: PaymentData): void {
@@ -99,11 +119,15 @@ export class UpcPayment implements IUpcPayment {
       return;
     }
 
-    const iframeWrapper = document.querySelector(this.iframeProps?.wrapperSelector || 'body');
+    const iframeWrapper = document.querySelector(
+      this.iframeProps?.wrapperSelector || 'body',
+    );
     if (!iframeWrapper) {
       throw new Error('Iframe wrapper element not found');
     }
-    const existingWrapper = document.querySelector('.upc-payment-iframe-wrapper');
+    const existingWrapper = document.querySelector(
+      '.upc-payment-iframe-wrapper',
+    );
     if (existingWrapper) {
       existingWrapper.remove();
     }
@@ -124,9 +148,11 @@ export class UpcPayment implements IUpcPayment {
       iframeWrapper.appendChild(iframe);
     } else {
       const iframeWrapperInternal = this.getIframeWrapper();
-      iframeWrapperInternal.querySelector('button')?.addEventListener('click', () => {
-        iframeWrapperInternal.remove();
-      });
+      iframeWrapperInternal
+        .querySelector('button')
+        ?.addEventListener('click', () => {
+          iframeWrapperInternal.remove();
+        });
       iframeWrapperInternal.querySelector('main')?.appendChild(iframe);
       document.body.appendChild(iframeWrapperInternal);
     }
@@ -146,7 +172,7 @@ export class UpcPayment implements IUpcPayment {
     }
   }
 
-  private validateCustomerData(data: CustomerData|undefined): void {
+  private validateCustomerData(data: CustomerData | undefined): void {
     if (!data) {
       return;
     }
@@ -167,7 +193,7 @@ export class UpcPayment implements IUpcPayment {
     }
   }
 
-  private validateIframeProps(props: IframeProps|undefined): void {
+  private validateIframeProps(props: IframeProps | undefined): void {
     if (!props) {
       return;
     }
@@ -194,13 +220,19 @@ export class UpcPayment implements IUpcPayment {
         throw new Error('Field "payment.altTotalAmountCents" is invalid');
       }
     }
-    if (data.altCurrencyNumericCode && typeof data.altCurrencyNumericCode !== 'string') {
+    if (
+      data.altCurrencyNumericCode &&
+      typeof data.altCurrencyNumericCode !== 'string'
+    ) {
       throw new Error('Field "payment.altCurrencyNumericCode" is invalid');
     }
     if (data.altFeeCents && typeof data.altFeeCents !== 'number') {
       throw new Error('Field "payment.altFeeCents" is invalid');
     }
-    if (typeof data.currencyNumericCode !== 'string' || !data.currencyNumericCode) {
+    if (
+      typeof data.currencyNumericCode !== 'string' ||
+      !data.currencyNumericCode
+    ) {
       throw new Error('Field "payment.currencyNumericCode" is invalid');
     }
     if (data.delay) {
@@ -252,7 +284,7 @@ export class UpcPayment implements IUpcPayment {
     form.setAttribute('method', 'POST');
     form.style.visibility = 'hidden';
     if (this.mode === 'PaymentPage') {
-      form.setAttribute('target', '_blank');
+      form.setAttribute('target', this.paymentPageTarget);
     }
     const meta = document.createElement('meta');
     meta.setAttribute('http-equiv', 'Content-Type');
@@ -264,10 +296,14 @@ export class UpcPayment implements IUpcPayment {
     form.appendChild(this.getInputEl('Signature', this.merchant.signature));
 
     if (data.altTotalAmountCents) {
-      form.appendChild(this.getInputEl('AltTotalAmount', data.altTotalAmountCents.toString()));
+      form.appendChild(
+        this.getInputEl('AltTotalAmount', data.altTotalAmountCents.toString()),
+      );
     }
     if (data.altCurrencyNumericCode) {
-      form.appendChild(this.getInputEl('AltCurrency', data.altCurrencyNumericCode));
+      form.appendChild(
+        this.getInputEl('AltCurrency', data.altCurrencyNumericCode),
+      );
     }
     if (data.altFeeCents) {
       form.appendChild(this.getInputEl('AltFee', data.altFeeCents.toString()));
@@ -284,31 +320,45 @@ export class UpcPayment implements IUpcPayment {
       form.appendChild(this.getInputEl('locale', data.locale));
     }
     form.appendChild(this.getInputEl('OrderID', data.orderId));
-    form.appendChild(this.getInputEl('PurchaseTime', String(data.purchaseTime)));
+    form.appendChild(
+      this.getInputEl('PurchaseTime', String(data.purchaseTime)),
+    );
     if (data.token) {
       form.appendChild(this.getInputEl('UPCToken', data.token));
     }
-    form.appendChild(this.getInputEl('TotalAmount', data.totalAmountCents.toString()));
+    form.appendChild(
+      this.getInputEl('TotalAmount', data.totalAmountCents.toString()),
+    );
     if (this.customer?.email) {
       form.appendChild(this.getInputEl('email', this.customer.email));
     }
     if (this.customer?.phoneCountryCode) {
-      form.appendChild(this.getInputEl('phoneCountryCode', this.customer.phoneCountryCode));
+      form.appendChild(
+        this.getInputEl('phoneCountryCode', this.customer.phoneCountryCode),
+      );
     }
     if (this.customer?.phoneNumber) {
-      form.appendChild(this.getInputEl('phoneNumber', this.customer.phoneNumber));
+      form.appendChild(
+        this.getInputEl('phoneNumber', this.customer.phoneNumber),
+      );
     }
     if (this.customer?.firstName) {
-      form.appendChild(this.getInputEl('consumerFirstName', this.customer.firstName));
+      form.appendChild(
+        this.getInputEl('consumerFirstName', this.customer.firstName),
+      );
     }
     if (this.customer?.lastName) {
-      form.appendChild(this.getInputEl('consumerLastName', this.customer.lastName));
+      form.appendChild(
+        this.getInputEl('consumerLastName', this.customer.lastName),
+      );
     }
     return form;
   }
 
   private setMessageListener(): void {
-    const processEvent = (event: MessageEvent<EventMessageFromPaymentPage>): void => {
+    const processEvent = (
+      event: MessageEvent<EventMessageFromPaymentPage>,
+    ): void => {
       const from = event.data.from;
       if (from !== 'UpcPaymentIframe') {
         return;
