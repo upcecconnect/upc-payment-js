@@ -48,6 +48,9 @@ interface IUpcPayment extends IUpcPaymentProps {
     pay: (data: PaymentData) => void;
 }
 export declare class UpcPayment implements IUpcPayment {
+    private readonly processEvent;
+    private activeIframeWindow;
+    private expectedIframeOrigin;
     readonly mode: "PaymentIframe" | "PaymentModalIframe" | "PaymentPage";
     readonly merchant: MerchantData;
     readonly customer: CustomerData | undefined;

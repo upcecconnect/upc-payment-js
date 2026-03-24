@@ -4,8 +4,10 @@
   "description": "upc-payment-js allows to initiate and process a payment in a separate browser tab or within an iframe directly on the website",
   "main": "./dist/umd/upc-payment-js.umd.cjs",
   "module": "./dist/es/upc-payment-js.js",
+  "types": "./dist/types/upc-payment-js.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/types/upc-payment-js.d.ts",
       "require": "./dist/umd/upc-payment-js.umd.cjs",
       "import": "./dist/es/upc-payment-js.js"
     }
@@ -17,7 +19,11 @@
   "scripts": {
     "dev": "vite",
     "check-types": "tsc --noEmit",
-    "build": "tsc && vite build --mode iife && vite build --mode es && vite build --mode umd"
+    "compile": "tsc",
+    "build:types": "tsc -p tsconfig.types.json",
+    "build": "npm run build:types && npm run compile && concurrently \"vite build --mode iife\" \"vite build --mode es\" \"vite build --mode umd\"",
+    "test": "vitest run --environment jsdom --pool threads",
+    "test:watch": "vitest --environment jsdom --pool threads"
   },
   "repository": {
     "type": "git",
@@ -34,17 +40,20 @@
     "@types/node": "^25.5.0",
     "@typescript-eslint/eslint-plugin": "^8.57.2",
     "@typescript-eslint/parser": "^8.57.2",
+    "concurrently": "^9.2.1",
     "eslint": "^9.39.1",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-promise": "^7.2.1",
+    "jsdom": "^29.0.1",
     "oxlint": "^1.56.0",
     "typescript": "^5.9.3",
     "vite": "^8.0.2",
-    "vite-plugin-dts": "^4.5.4"
+    "vitest": "^4.1.1"
   },
   "files": [
     "dist/es",
     "dist/umd",
-    "dist/iife"
+    "dist/iife",
+    "dist/types"
   ]
 }

@@ -73,6 +73,79 @@ interface IUpcPayment extends IUpcPaymentProps {
 }
 
 export class UpcPayment implements IUpcPayment {
+  // Fix 1: Keep a stable message handler reference on the class instance so
+  // removeEventListener can actually detach previously attached listeners.
+  // Without this, every pay() call creates a new function identity and old
+  // listeners continue to live, causing duplicated callbacks over time.
+  private readonly processEvent = (
+    event: MessageEvent<EventMessageFromPaymentPage>,
+  ): void => {
+    // Fix 2: Validate message shape early to avoid runtime access errors when
+    // unrelated postMessage payloads (non-object data) are received.
+    if (!event.data || typeof event.data !== 'object') {
+      return;
+    }
+
+    const from = event.data.from;
+    if (from !== 'UpcPaymentIframe') {
+      return;
+    }
+
+    // Fix 3: Accept postMessage only from expected origin, derived from the
+    // payment URL for the current pay() call. This prevents other origins from
+    // spoofing iframe events by sending crafted payloads into the parent page.
+    if (
+      !this.expectedIframeOrigin ||
+      event.origin !== this.expectedIframeOrigin
+    ) {
+      return;
+    }
+
+    // Fix 4: Validate sender window identity to ensure events come from the
+    // active payment iframe and not from another window/tab/frame at same origin.
+    if (event.source !== this.activeIframeWindow) {
+      return;
+    }
+
+    let callback: CallbackFunction = () => {
+      // do nothing
+    };
+    if (typeof this.iframeProps?.callback === 'function') {
+      callback = this.iframeProps.callback;
+    }
+
+    const messageToEvent: Record<
+      MessageFromPaymentPage,
+      PaymentIframeCallbackData['event']
+    > = {
+      AppLoaded: 'loaded',
+      Failure: 'failure',
+      Success: 'success',
+      GoBackToSite: 'go-back',
+      TryAgain: 'try-again',
+    };
+
+    const callbackEvent = messageToEvent[event.data.message];
+    if (!callbackEvent) {
+      // eslint-disable-next-line
+      console.error(`Unknown message from iframe ${event.data.message}`);
+      return;
+    }
+
+    callback({
+      event: callbackEvent,
+      data: {
+        height: event.data.height,
+        width: event.data.width,
+      },
+    });
+  };
+
+  // Fix 5: Track the currently active iframe window and expected origin used
+  // by security checks in processEvent.
+  private activeIframeWindow: Window | null = null;
+  private expectedIframeOrigin: string | null = null;
+
   public readonly mode;
   public readonly merchant;
   public readonly customer;
@@ -111,8 +184,10 @@ export class UpcPayment implements IUpcPayment {
   }
 
   public pay(data: PaymentData): void {
-    const form = this.getPaymentForm(data);
+    // Fix 6: Run validation before any DOM/form creation so invalid input fails
+    // fast and we avoid creating side effects from malformed payment data.
     this.validatePaymentData(data);
+    const form = this.getPaymentForm(data);
     if (this.mode === 'PaymentPage') {
       document.body.appendChild(form);
       form.submit();
@@ -136,7 +211,13 @@ export class UpcPayment implements IUpcPayment {
       existingIframe.remove();
     }
 
+    // Fix 7: Reset active iframe tracking before creating a new one.
+    this.activeIframeWindow = null;
+
     const iframe = document.createElement('iframe');
+    // Fix 8: Resolve expected origin from form action URL and set listener
+    // before submit to safely process lifecycle messages from payment page.
+    this.expectedIframeOrigin = new URL(form.action).origin;
     this.setMessageListener();
     iframe.setAttribute('frameborder', '0');
     iframe.style.width = '100%';
@@ -151,11 +232,15 @@ export class UpcPayment implements IUpcPayment {
       iframeWrapperInternal
         .querySelector('button')
         ?.addEventListener('click', () => {
+          // Fix 9: Clear active iframe reference when modal is manually closed.
+          this.activeIframeWindow = null;
           iframeWrapperInternal.remove();
         });
       iframeWrapperInternal.querySelector('main')?.appendChild(iframe);
       document.body.appendChild(iframeWrapperInternal);
     }
+    // Fix 10: Capture the concrete iframe window reference used for source check.
+    this.activeIframeWindow = iframe.contentWindow;
     iframe.contentWindow?.document.body.appendChild(form);
     form.submit();
   }
@@ -212,7 +297,9 @@ export class UpcPayment implements IUpcPayment {
   }
 
   private validatePaymentData(data: PaymentData): void {
-    if (data.altTotalAmountCents) {
+    // Fix 11: Use explicit undefined checks for optional numeric fields so
+    // legitimate zero values are validated instead of being silently skipped.
+    if (data.altTotalAmountCents !== undefined) {
       if (typeof data.altTotalAmountCents !== 'number') {
         throw new Error('Field "payment.altTotalAmountCents" is invalid');
       }
@@ -226,8 +313,13 @@ export class UpcPayment implements IUpcPayment {
     ) {
       throw new Error('Field "payment.altCurrencyNumericCode" is invalid');
     }
-    if (data.altFeeCents && typeof data.altFeeCents !== 'number') {
-      throw new Error('Field "payment.altFeeCents" is invalid');
+    if (data.altFeeCents !== undefined) {
+      if (typeof data.altFeeCents !== 'number') {
+        throw new Error('Field "payment.altFeeCents" is invalid');
+      }
+      if (Number.isNaN(data.altFeeCents)) {
+        throw new Error('Field "payment.altFeeCents" is invalid');
+      }
     }
     if (
       typeof data.currencyNumericCode !== 'string' ||
@@ -235,7 +327,7 @@ export class UpcPayment implements IUpcPayment {
     ) {
       throw new Error('Field "payment.currencyNumericCode" is invalid');
     }
-    if (data.delay) {
+    if (data.delay !== undefined) {
       if (typeof data.delay !== 'number') {
         throw new Error('Field "payment.delay" is invalid');
       }
@@ -246,8 +338,13 @@ export class UpcPayment implements IUpcPayment {
     if (typeof data.description !== 'string' || !data.description) {
       throw new Error('Field "payment.description" is invalid');
     }
-    if (data.feeCents && typeof data.feeCents !== 'number') {
-      throw new Error('Field "payment.feeCents" is invalid');
+    if (data.feeCents !== undefined) {
+      if (typeof data.feeCents !== 'number') {
+        throw new Error('Field "payment.feeCents" is invalid');
+      }
+      if (Number.isNaN(data.feeCents)) {
+        throw new Error('Field "payment.feeCents" is invalid');
+      }
     }
     if (data.locale && typeof data.locale !== 'string') {
       throw new Error('Field "payment.locale" is invalid');
@@ -265,7 +362,8 @@ export class UpcPayment implements IUpcPayment {
       throw new Error('Payment totalAmountCents is invalid');
     }
     if (data.url && typeof data.url !== 'string') {
-      throw new Error('Payment locale is invalid');
+      // Fix 12: Return precise field name in error message to speed up debugging.
+      throw new Error('Field "payment.url" is invalid');
     }
   }
 
@@ -295,7 +393,9 @@ export class UpcPayment implements IUpcPayment {
     form.appendChild(this.getInputEl('TerminalID', this.merchant.terminalId));
     form.appendChild(this.getInputEl('Signature', this.merchant.signature));
 
-    if (data.altTotalAmountCents) {
+    // Fix 13: Use explicit undefined checks when building form fields so zero
+    // values are not dropped from outgoing payment payload.
+    if (data.altTotalAmountCents !== undefined) {
       form.appendChild(
         this.getInputEl('AltTotalAmount', data.altTotalAmountCents.toString()),
       );
@@ -305,15 +405,15 @@ export class UpcPayment implements IUpcPayment {
         this.getInputEl('AltCurrency', data.altCurrencyNumericCode),
       );
     }
-    if (data.altFeeCents) {
+    if (data.altFeeCents !== undefined) {
       form.appendChild(this.getInputEl('AltFee', data.altFeeCents.toString()));
     }
     form.appendChild(this.getInputEl('Currency', data.currencyNumericCode));
-    if (data.delay) {
+    if (data.delay !== undefined) {
       form.appendChild(this.getInputEl('delay', data.delay.toString()));
     }
     form.appendChild(this.getInputEl('PurchaseDesc', data.description));
-    if (data.feeCents) {
+    if (data.feeCents !== undefined) {
       form.appendChild(this.getInputEl('Fee', data.feeCents.toString()));
     }
     if (data.locale) {
@@ -356,74 +456,10 @@ export class UpcPayment implements IUpcPayment {
   }
 
   private setMessageListener(): void {
-    const processEvent = (
-      event: MessageEvent<EventMessageFromPaymentPage>,
-    ): void => {
-      const from = event.data.from;
-      if (from !== 'UpcPaymentIframe') {
-        return;
-      }
-      let callback: CallbackFunction = () => {
-        // do nothing
-      };
-      if (typeof this.iframeProps?.callback === 'function') {
-        callback = this.iframeProps.callback;
-      }
-      const message = event.data.message;
-      switch (message) {
-        case 'AppLoaded':
-          callback({
-            event: 'loaded',
-            data: {
-              height: event.data.height,
-              width: event.data.width,
-            },
-          });
-          break;
-        case 'Failure':
-          callback({
-            event: 'failure',
-            data: {
-              height: event.data.height,
-              width: event.data.width,
-            },
-          });
-          break;
-        case 'Success':
-          callback({
-            event: 'success',
-            data: {
-              height: event.data.height,
-              width: event.data.width,
-            },
-          });
-          break;
-        case 'GoBackToSite':
-          callback({
-            event: 'go-back',
-            data: {
-              height: event.data.height,
-              width: event.data.width,
-            },
-          });
-          break;
-        case 'TryAgain':
-          callback({
-            event: 'try-again',
-            data: {
-              height: event.data.height,
-              width: event.data.width,
-            },
-          });
-          break;
-        default:
-          // eslint-disable-next-line
-          console.error(`Unknown message from iframe ${message}`);
-          break;
-      }
-    };
-    window.removeEventListener('message', processEvent);
-    window.addEventListener('message', processEvent);
+    // Fix 14: Rebind using the same class-level handler reference to guarantee
+    // idempotent listener registration across repeated pay() calls.
+    window.removeEventListener('message', this.processEvent);
+    window.addEventListener('message', this.processEvent);
   }
 
   private getIframeWrapper(): HTMLElement {

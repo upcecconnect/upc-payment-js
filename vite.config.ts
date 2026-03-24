@@ -1,7 +1,6 @@
 import { defineConfig } from 'vite';
 import { UserConfig } from 'vite';
 import { resolve } from 'path';
-import dts from 'vite-plugin-dts';
 
 export default defineConfig(({ command, mode }): UserConfig => {
   if (command === 'serve') {
@@ -25,11 +24,6 @@ export default defineConfig(({ command, mode }): UserConfig => {
           },
         },
       },
-      plugins: [
-        dts({
-          outDir: resolve(__dirname, 'dist', 'iife'),
-        }),
-      ],
     };
   }
   if (mode === 'es') {
@@ -47,11 +41,6 @@ export default defineConfig(({ command, mode }): UserConfig => {
           },
         },
       },
-      plugins: [
-        dts({
-          outDir: resolve(__dirname, 'dist', 'es'),
-        }),
-      ],
     };
   }
   return {
@@ -68,18 +57,5 @@ export default defineConfig(({ command, mode }): UserConfig => {
         },
       },
     },
-    plugins: [
-      dts({
-        outDir: resolve(__dirname, 'dist', 'umd'),
-        beforeWriteFile(filePath, content) {
-          return {
-            filePath: filePath.replace(
-              'upc-payment-js.d.ts',
-              'upc-payment-js.umd.cjs.d.ts',
-            ),
-          };
-        },
-      }),
-    ],
   };
 });
