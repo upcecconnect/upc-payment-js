@@ -1,13 +1,14 @@
-class p {
+const c = "https://ecg.test.upc.ua/go/payment-link";
+class d {
   constructor(e) {
-    const r = ["PaymentIframe", "PaymentModalIframe", "PaymentPage"];
-    e.mode && r.includes(e.mode) ? this.mode = e.mode : this.mode = "PaymentPage", this.validateMerchantData(e.merchant), this.merchant = e.merchant, this.validateCustomerData(e.customer), this.customer = e.customer, this.validateIframeProps(e.iframeProps), this.iframeProps = e.iframeProps;
+    const i = ["PaymentIframe", "PaymentModalIframe", "PaymentPage"];
+    e.mode && i.includes(e.mode) ? this.mode = e.mode : this.mode = "PaymentPage", this.validateMerchantData(e.merchant), this.merchant = e.merchant, this.validateCustomerData(e.customer), this.customer = e.customer, this.validateIframeProps(e.iframeProps), this.iframeProps = e.iframeProps;
   }
   pay(e) {
-    var s, a, l, d;
-    const r = this.getPaymentForm(e);
+    var s, l, a, p;
+    const i = this.getPaymentForm(e);
     if (this.validatePaymentData(e), this.mode === "PaymentPage") {
-      document.body.appendChild(r), r.submit();
+      document.body.appendChild(i), i.submit();
       return;
     }
     const t = document.querySelector(((s = this.iframeProps) == null ? void 0 : s.wrapperSelector) || "body");
@@ -17,16 +18,30 @@ class p {
     n && n.remove();
     const o = document.querySelector("#upc-payment-iframe");
     o && o.remove();
-    const i = document.createElement("iframe");
-    if (this.setMessageListener(), i.setAttribute("frameborder", "0"), i.style.width = "100%", i.style.height = "100%", i.style.minHeight = "500px", i.id = "upc-payment-iframe", this.mode === "PaymentIframe")
-      t.appendChild(i);
+    const r = document.createElement("iframe");
+    if (this.setMessageListener(), r.setAttribute("frameborder", "0"), r.style.width = "100%", r.style.height = "100%", r.style.minHeight = "500px", r.id = "upc-payment-iframe", this.mode === "PaymentIframe")
+      t.appendChild(r);
     else {
       const m = this.getIframeWrapper();
-      (a = m.querySelector("button")) == null || a.addEventListener("click", () => {
+      (l = m.querySelector("button")) == null || l.addEventListener("click", () => {
         m.remove();
-      }), (l = m.querySelector("main")) == null || l.appendChild(i), document.body.appendChild(m);
+      }), (a = m.querySelector("main")) == null || a.appendChild(r), document.body.appendChild(m);
     }
-    (d = i.contentWindow) == null || d.document.body.appendChild(r), r.submit();
+    (p = r.contentWindow) == null || p.document.body.appendChild(i), i.submit();
+  }
+  async createPaymentLink(e) {
+    this.validateMerchantData(this.merchant), this.validateCreatePaymentLinkData(e);
+    const i = await fetch(e.url || c, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+        // TODO(Pavlo): authorization (signature/token?) — this.merchant.signature is available
+      },
+      body: JSON.stringify(this.buildPaymentLinkPayload(e))
+    });
+    if (!i.ok)
+      throw new Error(`Payment link request failed: ${i.status}`);
+    return { url: (await i.json()).url };
   }
   validateMerchantData(e) {
     if (typeof e.id != "string" || !e.id)
@@ -98,33 +113,81 @@ class p {
     if (e.url && typeof e.url != "string")
       throw new Error("Payment locale is invalid");
   }
-  getInputEl(e, r) {
+  validateCreatePaymentLinkData(e) {
+    if (typeof e.currencyCode != "string" || !e.currencyCode)
+      throw new Error('Field "currencyCode" is required');
+    if (typeof e.recipientCardNumber != "string" || !e.recipientCardNumber)
+      throw new Error('Field "recipientCardNumber" is required');
+    if (typeof e.uuid != "string" || !e.uuid)
+      throw new Error('Field "uuid" is required');
+    if (!e.recipient || typeof e.recipient != "object")
+      throw new Error('Field "recipient" is required');
+    if (typeof e.recipient.firstName != "string" || !e.recipient.firstName)
+      throw new Error('Field "recipient.firstName" is required');
+    if (typeof e.recipient.lastName != "string" || !e.recipient.lastName)
+      throw new Error('Field "recipient.lastName" is required');
+    if (e.recipient.middleName && typeof e.recipient.middleName != "string")
+      throw new Error('Field "recipient.middleName" is invalid');
+    if (typeof e.expirationDate != "number" || Number.isNaN(e.expirationDate))
+      throw new Error('Field "expirationDate" is invalid');
+  }
+  buildPaymentLinkPayload(e) {
+    return {
+      terminalInfo: {
+        merchantId: this.merchant.id,
+        terminalId: this.merchant.terminalId
+      },
+      orderInfo: {
+        ...e.orderId ? { orderId: e.orderId } : {},
+        orderDate: e.orderDate ?? (/* @__PURE__ */ new Date()).toISOString(),
+        // TODO(Pavlo): confirm date format
+        amount: e.amount ?? "0",
+        currencyCode: e.currencyCode,
+        description: e.description ?? "Transfer to recipient card",
+        fee: e.fee ?? null
+      },
+      operationType: e.operationType ?? "2",
+      multipay: e.multipay ?? !0,
+      recipientCardNumber: e.recipientCardNumber,
+      uuid: e.uuid,
+      recipientPersonalInfo: {
+        firstName: e.recipient.firstName,
+        lastName: e.recipient.lastName,
+        ...e.recipient.middleName ? { middleName: e.recipient.middleName } : {}
+      },
+      expirationDate: e.expirationDate,
+      expirationDateUnit: e.expirationDateUnit ?? "EXPIRE_DATE",
+      invoiceLinkViewType: e.invoiceLinkViewType ?? "LINK",
+      locale: e.locale ?? "UK"
+    };
+  }
+  getInputEl(e, i) {
     const t = document.createElement("input");
-    return t.setAttribute("type", "hidden"), t.setAttribute("name", e), t.setAttribute("value", r), t;
+    return t.setAttribute("type", "hidden"), t.setAttribute("name", e), t.setAttribute("value", i), t;
   }
   getPaymentForm(e) {
-    var o, i, s, a, l;
-    const r = e.url || "https://ecg.test.upc.ua/go/pay", t = document.createElement("form");
-    t.setAttribute("action", r), t.setAttribute("method", "POST"), t.style.visibility = "hidden", this.mode === "PaymentPage" && t.setAttribute("target", "_blank");
+    var o, r, s, l, a;
+    const i = e.url || "https://ecg.test.upc.ua/go/pay", t = document.createElement("form");
+    t.setAttribute("action", i), t.setAttribute("method", "POST"), t.style.visibility = "hidden", this.mode === "PaymentPage" && t.setAttribute("target", "_blank");
     const n = document.createElement("meta");
-    return n.setAttribute("http-equiv", "Content-Type"), n.setAttribute("content", "text/html; charset=utf-8"), t.appendChild(n), t.appendChild(this.getInputEl("MerchantID", this.merchant.id)), t.appendChild(this.getInputEl("TerminalID", this.merchant.terminalId)), t.appendChild(this.getInputEl("Signature", this.merchant.signature)), e.altTotalAmountCents && t.appendChild(this.getInputEl("AltTotalAmount", e.altTotalAmountCents.toString())), e.altCurrencyNumericCode && t.appendChild(this.getInputEl("AltCurrency", e.altCurrencyNumericCode)), e.altFeeCents && t.appendChild(this.getInputEl("AltFee", e.altFeeCents.toString())), t.appendChild(this.getInputEl("Currency", e.currencyNumericCode)), e.delay && t.appendChild(this.getInputEl("delay", e.delay.toString())), t.appendChild(this.getInputEl("PurchaseDesc", e.description)), e.feeCents && t.appendChild(this.getInputEl("Fee", e.feeCents.toString())), e.locale && t.appendChild(this.getInputEl("locale", e.locale)), t.appendChild(this.getInputEl("OrderID", e.orderId)), t.appendChild(this.getInputEl("PurchaseTime", String(e.purchaseTime))), e.token && t.appendChild(this.getInputEl("UPCToken", e.token)), t.appendChild(this.getInputEl("TotalAmount", e.totalAmountCents.toString())), (o = this.customer) != null && o.email && t.appendChild(this.getInputEl("email", this.customer.email)), (i = this.customer) != null && i.phoneCountryCode && t.appendChild(this.getInputEl("phoneCountryCode", this.customer.phoneCountryCode)), (s = this.customer) != null && s.phoneNumber && t.appendChild(this.getInputEl("phoneNumber", this.customer.phoneNumber)), (a = this.customer) != null && a.firstName && t.appendChild(this.getInputEl("consumerFirstName", this.customer.firstName)), (l = this.customer) != null && l.lastName && t.appendChild(this.getInputEl("consumerLastName", this.customer.lastName)), t;
+    return n.setAttribute("http-equiv", "Content-Type"), n.setAttribute("content", "text/html; charset=utf-8"), t.appendChild(n), t.appendChild(this.getInputEl("MerchantID", this.merchant.id)), t.appendChild(this.getInputEl("TerminalID", this.merchant.terminalId)), t.appendChild(this.getInputEl("Signature", this.merchant.signature)), e.altTotalAmountCents && t.appendChild(this.getInputEl("AltTotalAmount", e.altTotalAmountCents.toString())), e.altCurrencyNumericCode && t.appendChild(this.getInputEl("AltCurrency", e.altCurrencyNumericCode)), e.altFeeCents && t.appendChild(this.getInputEl("AltFee", e.altFeeCents.toString())), t.appendChild(this.getInputEl("Currency", e.currencyNumericCode)), e.delay && t.appendChild(this.getInputEl("delay", e.delay.toString())), t.appendChild(this.getInputEl("PurchaseDesc", e.description)), e.feeCents && t.appendChild(this.getInputEl("Fee", e.feeCents.toString())), e.locale && t.appendChild(this.getInputEl("locale", e.locale)), t.appendChild(this.getInputEl("OrderID", e.orderId)), t.appendChild(this.getInputEl("PurchaseTime", String(e.purchaseTime))), e.token && t.appendChild(this.getInputEl("UPCToken", e.token)), t.appendChild(this.getInputEl("TotalAmount", e.totalAmountCents.toString())), (o = this.customer) != null && o.email && t.appendChild(this.getInputEl("email", this.customer.email)), (r = this.customer) != null && r.phoneCountryCode && t.appendChild(this.getInputEl("phoneCountryCode", this.customer.phoneCountryCode)), (s = this.customer) != null && s.phoneNumber && t.appendChild(this.getInputEl("phoneNumber", this.customer.phoneNumber)), (l = this.customer) != null && l.firstName && t.appendChild(this.getInputEl("consumerFirstName", this.customer.firstName)), (a = this.customer) != null && a.lastName && t.appendChild(this.getInputEl("consumerLastName", this.customer.lastName)), t;
   }
   setMessageListener() {
-    const e = (r) => {
-      var i;
-      if (r.data.from !== "UpcPaymentIframe")
+    const e = (i) => {
+      var r;
+      if (i.data.from !== "UpcPaymentIframe")
         return;
       let n = () => {
       };
-      typeof ((i = this.iframeProps) == null ? void 0 : i.callback) == "function" && (n = this.iframeProps.callback);
-      const o = r.data.message;
+      typeof ((r = this.iframeProps) == null ? void 0 : r.callback) == "function" && (n = this.iframeProps.callback);
+      const o = i.data.message;
       switch (o) {
         case "AppLoaded":
           n({
             event: "loaded",
             data: {
-              height: r.data.height,
-              width: r.data.width
+              height: i.data.height,
+              width: i.data.width
             }
           });
           break;
@@ -132,8 +195,8 @@ class p {
           n({
             event: "failure",
             data: {
-              height: r.data.height,
-              width: r.data.width
+              height: i.data.height,
+              width: i.data.width
             }
           });
           break;
@@ -141,8 +204,8 @@ class p {
           n({
             event: "success",
             data: {
-              height: r.data.height,
-              width: r.data.width
+              height: i.data.height,
+              width: i.data.width
             }
           });
           break;
@@ -150,8 +213,8 @@ class p {
           n({
             event: "go-back",
             data: {
-              height: r.data.height,
-              width: r.data.width
+              height: i.data.height,
+              width: i.data.width
             }
           });
           break;
@@ -159,8 +222,8 @@ class p {
           n({
             event: "try-again",
             data: {
-              height: r.data.height,
-              width: r.data.width
+              height: i.data.height,
+              width: i.data.width
             }
           });
           break;
@@ -222,5 +285,5 @@ class p {
   }
 }
 export {
-  p as UpcPayment
+  d as UpcPayment
 };

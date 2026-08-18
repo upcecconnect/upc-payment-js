@@ -23,6 +23,41 @@ export interface PaymentIframeCallbackData {
 }
 type CallbackFunction = (callbackData: PaymentIframeCallbackData) => void;
 
+export interface PaymentLinkRecipient {
+  readonly firstName: string;
+  readonly lastName: string;
+  readonly middleName?: string|undefined;
+}
+
+export interface CreatePaymentLinkData {
+  // provided by the caller
+  readonly currencyCode: string;
+  readonly recipientCardNumber: string;
+  readonly uuid: string;
+  readonly recipient: PaymentLinkRecipient;
+  readonly expirationDate: number;                   // card expiry, format TBD (Pavlo): 2905 = MMYY/YYMM?
+  // optional overrides for the under-the-hood defaults
+  readonly orderId?: string|undefined;
+  readonly amount?: string|undefined;                // default "0"
+  readonly description?: string|undefined;           // default "Transfer to recipient card"
+  readonly fee?: string|null|undefined;              // default null
+  readonly operationType?: string|undefined;         // default "2"
+  readonly multipay?: boolean|undefined;             // default true
+  readonly expirationDateUnit?: string|undefined;    // default "EXPIRE_DATE"
+  readonly invoiceLinkViewType?: string|undefined;   // default "LINK"
+  readonly locale?: string|undefined;                // default "UK"
+  readonly orderDate?: string|undefined;             // default: generated at call time
+  readonly url?: string|undefined;                   // endpoint override
+}
+
+export interface PaymentLinkResult {
+  readonly url: string;
+  // TODO(Pavlo): extend to match the real response (id, expiresAt, …)
+}
+
+// TODO(Pavlo): real endpoint URL for payment-link generation
+const PAYMENT_LINK_ENDPOINT = 'https://ecg.test.upc.ua/go/payment-link';
+
 interface IframeProps {
   readonly wrapperSelector?: string|undefined;
   readonly callback?: CallbackFunction;
@@ -67,6 +102,7 @@ interface IUpcPaymentProps {
 
 interface IUpcPayment extends IUpcPaymentProps {
   pay: (data: PaymentData) => void;
+  createPaymentLink: (data: CreatePaymentLinkData) => Promise<PaymentLinkResult>;
 }
 
 export class UpcPayment implements IUpcPayment {
@@ -132,6 +168,25 @@ export class UpcPayment implements IUpcPayment {
     }
     iframe.contentWindow?.document.body.appendChild(form);
     form.submit();
+  }
+
+  public async createPaymentLink(data: CreatePaymentLinkData): Promise<PaymentLinkResult> {
+    this.validateMerchantData(this.merchant);
+    this.validateCreatePaymentLinkData(data);
+    const response = await fetch(data.url || PAYMENT_LINK_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        // TODO(Pavlo): authorization (signature/token?) — this.merchant.signature is available
+      },
+      body: JSON.stringify(this.buildPaymentLinkPayload(data)),
+    });
+    if (!response.ok) {
+      throw new Error(`Payment link request failed: ${response.status}`);
+    }
+    const json = await response.json();
+    // TODO(Pavlo): map the real response shape into { url }
+    return { url: json.url };
   }
 
   private validateMerchantData(data: MerchantData): void {
@@ -235,6 +290,63 @@ export class UpcPayment implements IUpcPayment {
     if (data.url && typeof data.url !== 'string') {
       throw new Error('Payment locale is invalid');
     }
+  }
+
+  private validateCreatePaymentLinkData(data: CreatePaymentLinkData): void {
+    if (typeof data.currencyCode !== 'string' || !data.currencyCode) {
+      throw new Error('Field "currencyCode" is required');
+    }
+    if (typeof data.recipientCardNumber !== 'string' || !data.recipientCardNumber) {
+      throw new Error('Field "recipientCardNumber" is required');
+    }
+    if (typeof data.uuid !== 'string' || !data.uuid) {
+      throw new Error('Field "uuid" is required');
+    }
+    if (!data.recipient || typeof data.recipient !== 'object') {
+      throw new Error('Field "recipient" is required');
+    }
+    if (typeof data.recipient.firstName !== 'string' || !data.recipient.firstName) {
+      throw new Error('Field "recipient.firstName" is required');
+    }
+    if (typeof data.recipient.lastName !== 'string' || !data.recipient.lastName) {
+      throw new Error('Field "recipient.lastName" is required');
+    }
+    if (data.recipient.middleName && typeof data.recipient.middleName !== 'string') {
+      throw new Error('Field "recipient.middleName" is invalid');
+    }
+    if (typeof data.expirationDate !== 'number' || Number.isNaN(data.expirationDate)) {
+      throw new Error('Field "expirationDate" is invalid');
+    }
+  }
+
+  private buildPaymentLinkPayload(data: CreatePaymentLinkData): Record<string, unknown> {
+    return {
+      terminalInfo: {
+        merchantId: this.merchant.id,
+        terminalId: this.merchant.terminalId,
+      },
+      orderInfo: {
+        ...(data.orderId ? { orderId: data.orderId } : {}),
+        orderDate: data.orderDate ?? new Date().toISOString(), // TODO(Pavlo): confirm date format
+        amount: data.amount ?? '0',
+        currencyCode: data.currencyCode,
+        description: data.description ?? 'Transfer to recipient card',
+        fee: data.fee ?? null,
+      },
+      operationType: data.operationType ?? '2',
+      multipay: data.multipay ?? true,
+      recipientCardNumber: data.recipientCardNumber,
+      uuid: data.uuid,
+      recipientPersonalInfo: {
+        firstName: data.recipient.firstName,
+        lastName: data.recipient.lastName,
+        ...(data.recipient.middleName ? { middleName: data.recipient.middleName } : {}),
+      },
+      expirationDate: data.expirationDate,
+      expirationDateUnit: data.expirationDateUnit ?? 'EXPIRE_DATE',
+      invoiceLinkViewType: data.invoiceLinkViewType ?? 'LINK',
+      locale: data.locale ?? 'UK',
+    };
   }
 
   private getInputEl(name: string, value: string): HTMLInputElement {

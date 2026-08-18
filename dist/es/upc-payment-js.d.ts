@@ -6,6 +6,32 @@ export interface PaymentIframeCallbackData {
     };
 }
 type CallbackFunction = (callbackData: PaymentIframeCallbackData) => void;
+export interface PaymentLinkRecipient {
+    readonly firstName: string;
+    readonly lastName: string;
+    readonly middleName?: string | undefined;
+}
+export interface CreatePaymentLinkData {
+    readonly currencyCode: string;
+    readonly recipientCardNumber: string;
+    readonly uuid: string;
+    readonly recipient: PaymentLinkRecipient;
+    readonly expirationDate: number;
+    readonly orderId?: string | undefined;
+    readonly amount?: string | undefined;
+    readonly description?: string | undefined;
+    readonly fee?: string | null | undefined;
+    readonly operationType?: string | undefined;
+    readonly multipay?: boolean | undefined;
+    readonly expirationDateUnit?: string | undefined;
+    readonly invoiceLinkViewType?: string | undefined;
+    readonly locale?: string | undefined;
+    readonly orderDate?: string | undefined;
+    readonly url?: string | undefined;
+}
+export interface PaymentLinkResult {
+    readonly url: string;
+}
 interface IframeProps {
     readonly wrapperSelector?: string | undefined;
     readonly callback?: CallbackFunction;
@@ -45,6 +71,7 @@ interface IUpcPaymentProps {
 }
 interface IUpcPayment extends IUpcPaymentProps {
     pay: (data: PaymentData) => void;
+    createPaymentLink: (data: CreatePaymentLinkData) => Promise<PaymentLinkResult>;
 }
 export declare class UpcPayment implements IUpcPayment {
     readonly mode: "PaymentIframe" | "PaymentModalIframe" | "PaymentPage";
@@ -53,10 +80,13 @@ export declare class UpcPayment implements IUpcPayment {
     readonly iframeProps: IframeProps | undefined;
     constructor(props: IUpcPaymentProps);
     pay(data: PaymentData): void;
+    createPaymentLink(data: CreatePaymentLinkData): Promise<PaymentLinkResult>;
     private validateMerchantData;
     private validateCustomerData;
     private validateIframeProps;
     private validatePaymentData;
+    private validateCreatePaymentLinkData;
+    private buildPaymentLinkPayload;
     private getInputEl;
     private getPaymentForm;
     private setMessageListener;
