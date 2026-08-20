@@ -51,12 +51,13 @@ export interface CreatePaymentLinkData {
 }
 
 export interface PaymentLinkResult {
-  readonly url: string;
-  // TODO(Pavlo): extend to match the real response (id, expiresAt, …)
+  readonly url: string;          // maps from response "viewResponse"
+  readonly id: string;
+  readonly creationDate: string;
 }
 
-// TODO(Pavlo): real endpoint URL for payment-link generation
-const PAYMENT_LINK_ENDPOINT = 'https://ecg.test.upc.ua/go/payment-link';
+// TODO(Pavlo): temporary intranet dev endpoint — replace with the final public URL
+const PAYMENT_LINK_ENDPOINT = 'https://feature-PLD-3748-Link-Manage-127814-mt.dev.ecommerce.upc.intranet/dashboard/api/public/merchant-invoices';
 
 interface IframeProps {
   readonly wrapperSelector?: string|undefined;
@@ -173,20 +174,36 @@ export class UpcPayment implements IUpcPayment {
   public async createPaymentLink(data: CreatePaymentLinkData): Promise<PaymentLinkResult> {
     this.validateMerchantData(this.merchant);
     this.validateCreatePaymentLinkData(data);
+    const body = {
+      // header sent as-is for now (base64 of {"alg":"RS256"})
+      header: this.base64Encode('{"alg":"RS256"}'),
+      payload: this.base64Encode(JSON.stringify(this.buildPaymentLinkPayload(data))),
+      // TODO(Pavlo): real signature — empty for now
+      signature: '',
+    };
     const response = await fetch(data.url || PAYMENT_LINK_ENDPOINT, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        // TODO(Pavlo): authorization (signature/token?) — this.merchant.signature is available
-      },
-      body: JSON.stringify(this.buildPaymentLinkPayload(data)),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
     });
     if (!response.ok) {
       throw new Error(`Payment link request failed: ${response.status}`);
     }
     const json = await response.json();
-    // TODO(Pavlo): map the real response shape into { url }
-    return { url: json.url };
+    return {
+      url: json.viewResponse,
+      id: json.id,
+      creationDate: json.creationDate,
+    };
+  }
+
+  private base64Encode(input: string): string {
+    const bytes = new TextEncoder().encode(input);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i += 1) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
   }
 
   private validateMerchantData(data: MerchantData): void {
@@ -327,7 +344,7 @@ export class UpcPayment implements IUpcPayment {
       },
       orderInfo: {
         ...(data.orderId ? { orderId: data.orderId } : {}),
-        orderDate: data.orderDate ?? new Date().toISOString(), // TODO(Pavlo): confirm date format
+        orderDate: data.orderDate ?? new Date().toISOString(),
         amount: data.amount ?? '0',
         currencyCode: data.currencyCode,
         description: data.description ?? 'Transfer to recipient card',

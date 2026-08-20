@@ -31,6 +31,8 @@ export interface CreatePaymentLinkData {
 }
 export interface PaymentLinkResult {
     readonly url: string;
+    readonly id: string;
+    readonly creationDate: string;
 }
 interface IframeProps {
     readonly wrapperSelector?: string | undefined;
@@ -81,6 +83,7 @@ export declare class UpcPayment implements IUpcPayment {
     constructor(props: IUpcPaymentProps);
     pay(data: PaymentData): void;
     createPaymentLink(data: CreatePaymentLinkData): Promise<PaymentLinkResult>;
+    private base64Encode;
     private validateMerchantData;
     private validateCustomerData;
     private validateIframeProps;
