@@ -73,7 +73,7 @@ interface IUpcPaymentProps {
 }
 interface IUpcPayment extends IUpcPaymentProps {
     pay: (data: PaymentData) => void;
-    createPaymentLink: (data: CreatePaymentLinkData) => Promise<PaymentLinkResult>;
+    createPaymentByLink: (data: CreatePaymentLinkData) => Promise<PaymentLinkResult>;
 }
 export declare class UpcPayment implements IUpcPayment {
     readonly mode: "PaymentIframe" | "PaymentModalIframe" | "PaymentPage";
@@ -82,7 +82,7 @@ export declare class UpcPayment implements IUpcPayment {
     readonly iframeProps: IframeProps | undefined;
     constructor(props: IUpcPaymentProps);
     pay(data: PaymentData): void;
-    createPaymentLink(data: CreatePaymentLinkData): Promise<PaymentLinkResult>;
+    createPaymentByLink(data: CreatePaymentLinkData): Promise<PaymentLinkResult>;
     private base64Encode;
     private validateMerchantData;
     private validateCustomerData;

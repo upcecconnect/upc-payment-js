@@ -80,7 +80,7 @@ const payment = new UpcPayment({
   },
 });
 
-const { url } = await payment.createPaymentLink({
+const { url } = await payment.createPaymentByLink({
   currencyCode: '980',
   recipientCardNumber: '5559490000000007',
   uuid: 'Card-Uuid-0007-1808-0000',

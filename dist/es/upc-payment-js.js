@@ -29,7 +29,7 @@ class u {
     }
     (c = n.contentWindow) == null || c.document.body.appendChild(i), i.submit();
   }
-  async createPaymentLink(e) {
+  async createPaymentByLink(e) {
     this.validateMerchantData(this.merchant), this.validateCreatePaymentLinkData(e);
     const i = {
       header: this.base64Encode('{"alg":"RS256"}'),

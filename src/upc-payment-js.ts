@@ -100,7 +100,7 @@ interface IUpcPaymentProps {
 
 interface IUpcPayment extends IUpcPaymentProps {
   pay: (data: PaymentData) => void;
-  createPaymentLink: (data: CreatePaymentLinkData) => Promise<PaymentLinkResult>;
+  createPaymentByLink: (data: CreatePaymentLinkData) => Promise<PaymentLinkResult>;
 }
 
 export class UpcPayment implements IUpcPayment {
@@ -168,7 +168,7 @@ export class UpcPayment implements IUpcPayment {
     form.submit();
   }
 
-  public async createPaymentLink(data: CreatePaymentLinkData): Promise<PaymentLinkResult> {
+  public async createPaymentByLink(data: CreatePaymentLinkData): Promise<PaymentLinkResult> {
     this.validateMerchantData(this.merchant);
     this.validateCreatePaymentLinkData(data);
     const body = {
