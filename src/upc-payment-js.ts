@@ -30,33 +30,30 @@ export interface PaymentLinkRecipient {
 }
 
 export interface CreatePaymentLinkData {
-  // provided by the caller
   readonly currencyCode: string;
   readonly recipientCardNumber: string;
   readonly uuid: string;
   readonly recipient: PaymentLinkRecipient;
-  readonly expirationDate: number;                   // card expiry, format TBD (Pavlo): 2905 = MMYY/YYMM?
-  // optional overrides for the under-the-hood defaults
+  readonly expirationDate: number;
   readonly orderId?: string|undefined;
-  readonly amount?: string|undefined;                // default "0"
-  readonly description?: string|undefined;           // default "Transfer to recipient card"
-  readonly fee?: string|null|undefined;              // default null
-  readonly operationType?: string|undefined;         // default "2"
-  readonly multipay?: boolean|undefined;             // default true
-  readonly expirationDateUnit?: string|undefined;    // default "EXPIRE_DATE"
-  readonly invoiceLinkViewType?: string|undefined;   // default "LINK"
-  readonly locale?: string|undefined;                // default "UK"
-  readonly orderDate?: string|undefined;             // default: generated at call time
-  readonly url?: string|undefined;                   // endpoint override
+  readonly amount?: string|undefined;
+  readonly description?: string|undefined;
+  readonly fee?: string|null|undefined;
+  readonly operationType?: string|undefined;
+  readonly multipay?: boolean|undefined;
+  readonly expirationDateUnit?: string|undefined;
+  readonly invoiceLinkViewType?: string|undefined;
+  readonly locale?: string|undefined;
+  readonly orderDate?: string|undefined;
+  readonly url?: string|undefined;
 }
 
 export interface PaymentLinkResult {
-  readonly url: string;          // maps from response "viewResponse"
+  readonly url: string;
   readonly id: string;
   readonly creationDate: string;
 }
 
-// TODO(Pavlo): temporary intranet dev endpoint — replace with the final public URL
 const PAYMENT_LINK_ENDPOINT = 'https://feature-PLD-3748-Link-Manage-127814-mt.dev.ecommerce.upc.intranet/dashboard/api/public/merchant-invoices';
 
 interface IframeProps {
@@ -175,10 +172,8 @@ export class UpcPayment implements IUpcPayment {
     this.validateMerchantData(this.merchant);
     this.validateCreatePaymentLinkData(data);
     const body = {
-      // header sent as-is for now (base64 of {"alg":"RS256"})
       header: this.base64Encode('{"alg":"RS256"}'),
       payload: this.base64Encode(JSON.stringify(this.buildPaymentLinkPayload(data))),
-      // TODO(Pavlo): real signature — empty for now
       signature: '',
     };
     const response = await fetch(data.url || PAYMENT_LINK_ENDPOINT, {

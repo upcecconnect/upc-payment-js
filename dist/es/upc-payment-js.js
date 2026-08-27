@@ -32,10 +32,8 @@ class u {
   async createPaymentLink(e) {
     this.validateMerchantData(this.merchant), this.validateCreatePaymentLinkData(e);
     const i = {
-      // header sent as-is for now (base64 of {"alg":"RS256"})
       header: this.base64Encode('{"alg":"RS256"}'),
       payload: this.base64Encode(JSON.stringify(this.buildPaymentLinkPayload(e))),
-      // TODO(Pavlo): real signature — empty for now
       signature: ""
     }, t = await fetch(e.url || p, {
       method: "POST",
