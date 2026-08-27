@@ -1,4 +1,4 @@
-const p = "https://feature-PLD-3748-Link-Manage-127814-mt.dev.ecommerce.upc.intranet/dashboard/api/public/merchant-invoices";
+const p = "https://ecg.test.upc.ua/dashboard/api/public/merchant-invoices";
 class u {
   constructor(e) {
     const i = ["PaymentIframe", "PaymentModalIframe", "PaymentPage"];
