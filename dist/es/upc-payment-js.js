@@ -30,10 +30,10 @@ class u {
     (c = n.contentWindow) == null || c.document.body.appendChild(i), i.submit();
   }
   async createPaymentByLink(e) {
-    this.validateMerchantData(this.merchant), this.validateCreatePaymentLinkData(e);
+    this.validateMerchantData(this.merchant), this.validateCreatePaymentByLinkData(e);
     const i = {
       header: this.base64Encode('{"alg":"RS256"}'),
-      payload: this.base64Encode(JSON.stringify(this.buildPaymentLinkPayload(e))),
+      payload: this.base64Encode(JSON.stringify(this.buildPaymentByLinkPayload(e))),
       signature: ""
     }, t = await fetch(e.url || p, {
       method: "POST",
@@ -126,7 +126,7 @@ class u {
     if (e.url && typeof e.url != "string")
       throw new Error("Payment locale is invalid");
   }
-  validateCreatePaymentLinkData(e) {
+  validateCreatePaymentByLinkData(e) {
     if (typeof e.currencyCode != "string" || !e.currencyCode)
       throw new Error('Field "currencyCode" is required');
     if (typeof e.recipientCardNumber != "string" || !e.recipientCardNumber)
@@ -144,7 +144,7 @@ class u {
     if (typeof e.expirationDate != "number" || Number.isNaN(e.expirationDate))
       throw new Error('Field "expirationDate" is invalid');
   }
-  buildPaymentLinkPayload(e) {
+  buildPaymentByLinkPayload(e) {
     return {
       terminalInfo: {
         merchantId: this.merchant.id,

@@ -23,17 +23,17 @@ export interface PaymentIframeCallbackData {
 }
 type CallbackFunction = (callbackData: PaymentIframeCallbackData) => void;
 
-export interface PaymentLinkRecipient {
+export interface PaymentByLinkRecipient {
   readonly firstName: string;
   readonly lastName: string;
   readonly middleName?: string|undefined;
 }
 
-export interface CreatePaymentLinkData {
+export interface CreatePaymentByLinkData {
   readonly currencyCode: string;
   readonly recipientCardNumber: string;
   readonly uuid: string;
-  readonly recipient: PaymentLinkRecipient;
+  readonly recipient: PaymentByLinkRecipient;
   readonly expirationDate: number;
   readonly orderId?: string|undefined;
   readonly amount?: string|undefined;
@@ -48,13 +48,13 @@ export interface CreatePaymentLinkData {
   readonly url?: string|undefined;
 }
 
-export interface PaymentLinkResult {
+export interface PaymentByLinkResult {
   readonly url: string;
   readonly id: string;
   readonly creationDate: string;
 }
 
-const PAYMENT_LINK_ENDPOINT = 'https://feature-PLD-3748-Link-Manage-127814-mt.dev.ecommerce.upc.intranet/dashboard/api/public/merchant-invoices';
+const PAYMENT_BY_LINK_ENDPOINT = 'https://feature-PLD-3748-Link-Manage-127814-mt.dev.ecommerce.upc.intranet/dashboard/api/public/merchant-invoices';
 
 interface IframeProps {
   readonly wrapperSelector?: string|undefined;
@@ -100,7 +100,7 @@ interface IUpcPaymentProps {
 
 interface IUpcPayment extends IUpcPaymentProps {
   pay: (data: PaymentData) => void;
-  createPaymentByLink: (data: CreatePaymentLinkData) => Promise<PaymentLinkResult>;
+  createPaymentByLink: (data: CreatePaymentByLinkData) => Promise<PaymentByLinkResult>;
 }
 
 export class UpcPayment implements IUpcPayment {
@@ -168,15 +168,15 @@ export class UpcPayment implements IUpcPayment {
     form.submit();
   }
 
-  public async createPaymentByLink(data: CreatePaymentLinkData): Promise<PaymentLinkResult> {
+  public async createPaymentByLink(data: CreatePaymentByLinkData): Promise<PaymentByLinkResult> {
     this.validateMerchantData(this.merchant);
-    this.validateCreatePaymentLinkData(data);
+    this.validateCreatePaymentByLinkData(data);
     const body = {
       header: this.base64Encode('{"alg":"RS256"}'),
-      payload: this.base64Encode(JSON.stringify(this.buildPaymentLinkPayload(data))),
+      payload: this.base64Encode(JSON.stringify(this.buildPaymentByLinkPayload(data))),
       signature: '',
     };
-    const response = await fetch(data.url || PAYMENT_LINK_ENDPOINT, {
+    const response = await fetch(data.url || PAYMENT_BY_LINK_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -304,7 +304,7 @@ export class UpcPayment implements IUpcPayment {
     }
   }
 
-  private validateCreatePaymentLinkData(data: CreatePaymentLinkData): void {
+  private validateCreatePaymentByLinkData(data: CreatePaymentByLinkData): void {
     if (typeof data.currencyCode !== 'string' || !data.currencyCode) {
       throw new Error('Field "currencyCode" is required');
     }
@@ -331,7 +331,7 @@ export class UpcPayment implements IUpcPayment {
     }
   }
 
-  private buildPaymentLinkPayload(data: CreatePaymentLinkData): Record<string, unknown> {
+  private buildPaymentByLinkPayload(data: CreatePaymentByLinkData): Record<string, unknown> {
     return {
       terminalInfo: {
         merchantId: this.merchant.id,
