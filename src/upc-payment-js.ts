@@ -185,6 +185,9 @@ export class UpcPayment implements IUpcPayment {
       throw new Error(`Payment link request failed: ${response.status}`);
     }
     const json = await response.json();
+    if (!json || typeof json.viewResponse !== 'string') {
+      throw new Error('Payment by link response is invalid');
+    }
     return {
       url: json.viewResponse,
       id: json.id,
@@ -300,7 +303,7 @@ export class UpcPayment implements IUpcPayment {
       throw new Error('Payment totalAmountCents is invalid');
     }
     if (data.url && typeof data.url !== 'string') {
-      throw new Error('Payment locale is invalid');
+      throw new Error('Field "payment.url" is invalid');
     }
   }
 
@@ -328,6 +331,12 @@ export class UpcPayment implements IUpcPayment {
     }
     if (typeof data.expirationDate !== 'number' || Number.isNaN(data.expirationDate)) {
       throw new Error('Field "expirationDate" is invalid');
+    }
+    if (data.locale && typeof data.locale !== 'string') {
+      throw new Error('Field "locale" is invalid');
+    }
+    if (data.url && typeof data.url !== 'string') {
+      throw new Error('Field "url" is invalid');
     }
   }
 

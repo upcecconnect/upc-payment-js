@@ -5,7 +5,7 @@ class u {
     e.mode && i.includes(e.mode) ? this.mode = e.mode : this.mode = "PaymentPage", this.validateMerchantData(e.merchant), this.merchant = e.merchant, this.validateCustomerData(e.customer), this.customer = e.customer, this.validateIframeProps(e.iframeProps), this.iframeProps = e.iframeProps;
   }
   pay(e) {
-    var s, a, l, c;
+    var s, l, a, c;
     const i = this.getPaymentForm(e);
     if (this.validatePaymentData(e), this.mode === "PaymentPage") {
       document.body.appendChild(i), i.submit();
@@ -23,9 +23,9 @@ class u {
       t.appendChild(n);
     else {
       const m = this.getIframeWrapper();
-      (a = m.querySelector("button")) == null || a.addEventListener("click", () => {
+      (l = m.querySelector("button")) == null || l.addEventListener("click", () => {
         m.remove();
-      }), (l = m.querySelector("main")) == null || l.appendChild(n), document.body.appendChild(m);
+      }), (a = m.querySelector("main")) == null || a.appendChild(n), document.body.appendChild(m);
     }
     (c = n.contentWindow) == null || c.document.body.appendChild(i), i.submit();
   }
@@ -40,9 +40,13 @@ class u {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(i)
     });
-    if (!t.ok)
-      throw new Error(`Payment link request failed: ${t.status}`);
+    if (!t.ok) {
+      const o = await t.text().catch(() => "");
+      throw new Error(`Payment by link request failed: ${t.status} ${o}`.trim());
+    }
     const r = await t.json();
+    if (!r || typeof r.viewResponse != "string")
+      throw new Error("Payment by link response is invalid");
     return {
       url: r.viewResponse,
       id: r.id,
@@ -124,7 +128,7 @@ class u {
     if (typeof e.totalAmountCents != "number" || !e.totalAmountCents)
       throw new Error("Payment totalAmountCents is invalid");
     if (e.url && typeof e.url != "string")
-      throw new Error("Payment locale is invalid");
+      throw new Error('Field "payment.url" is invalid');
   }
   validateCreatePaymentByLinkData(e) {
     if (typeof e.currencyCode != "string" || !e.currencyCode)
@@ -143,6 +147,10 @@ class u {
       throw new Error('Field "recipient.middleName" is invalid');
     if (typeof e.expirationDate != "number" || Number.isNaN(e.expirationDate))
       throw new Error('Field "expirationDate" is invalid');
+    if (e.locale && typeof e.locale != "string")
+      throw new Error('Field "locale" is invalid');
+    if (e.url && typeof e.url != "string")
+      throw new Error('Field "url" is invalid');
   }
   buildPaymentByLinkPayload(e) {
     return {
@@ -178,11 +186,11 @@ class u {
     return t.setAttribute("type", "hidden"), t.setAttribute("name", e), t.setAttribute("value", i), t;
   }
   getPaymentForm(e) {
-    var o, n, s, a, l;
+    var o, n, s, l, a;
     const i = e.url || "https://ecg.test.upc.ua/go/pay", t = document.createElement("form");
     t.setAttribute("action", i), t.setAttribute("method", "POST"), t.style.visibility = "hidden", this.mode === "PaymentPage" && t.setAttribute("target", "_blank");
     const r = document.createElement("meta");
-    return r.setAttribute("http-equiv", "Content-Type"), r.setAttribute("content", "text/html; charset=utf-8"), t.appendChild(r), t.appendChild(this.getInputEl("MerchantID", this.merchant.id)), t.appendChild(this.getInputEl("TerminalID", this.merchant.terminalId)), t.appendChild(this.getInputEl("Signature", this.merchant.signature)), e.altTotalAmountCents && t.appendChild(this.getInputEl("AltTotalAmount", e.altTotalAmountCents.toString())), e.altCurrencyNumericCode && t.appendChild(this.getInputEl("AltCurrency", e.altCurrencyNumericCode)), e.altFeeCents && t.appendChild(this.getInputEl("AltFee", e.altFeeCents.toString())), t.appendChild(this.getInputEl("Currency", e.currencyNumericCode)), e.delay && t.appendChild(this.getInputEl("delay", e.delay.toString())), t.appendChild(this.getInputEl("PurchaseDesc", e.description)), e.feeCents && t.appendChild(this.getInputEl("Fee", e.feeCents.toString())), e.locale && t.appendChild(this.getInputEl("locale", e.locale)), t.appendChild(this.getInputEl("OrderID", e.orderId)), t.appendChild(this.getInputEl("PurchaseTime", String(e.purchaseTime))), e.token && t.appendChild(this.getInputEl("UPCToken", e.token)), t.appendChild(this.getInputEl("TotalAmount", e.totalAmountCents.toString())), (o = this.customer) != null && o.email && t.appendChild(this.getInputEl("email", this.customer.email)), (n = this.customer) != null && n.phoneCountryCode && t.appendChild(this.getInputEl("phoneCountryCode", this.customer.phoneCountryCode)), (s = this.customer) != null && s.phoneNumber && t.appendChild(this.getInputEl("phoneNumber", this.customer.phoneNumber)), (a = this.customer) != null && a.firstName && t.appendChild(this.getInputEl("consumerFirstName", this.customer.firstName)), (l = this.customer) != null && l.lastName && t.appendChild(this.getInputEl("consumerLastName", this.customer.lastName)), t;
+    return r.setAttribute("http-equiv", "Content-Type"), r.setAttribute("content", "text/html; charset=utf-8"), t.appendChild(r), t.appendChild(this.getInputEl("MerchantID", this.merchant.id)), t.appendChild(this.getInputEl("TerminalID", this.merchant.terminalId)), t.appendChild(this.getInputEl("Signature", this.merchant.signature)), e.altTotalAmountCents && t.appendChild(this.getInputEl("AltTotalAmount", e.altTotalAmountCents.toString())), e.altCurrencyNumericCode && t.appendChild(this.getInputEl("AltCurrency", e.altCurrencyNumericCode)), e.altFeeCents && t.appendChild(this.getInputEl("AltFee", e.altFeeCents.toString())), t.appendChild(this.getInputEl("Currency", e.currencyNumericCode)), e.delay && t.appendChild(this.getInputEl("delay", e.delay.toString())), t.appendChild(this.getInputEl("PurchaseDesc", e.description)), e.feeCents && t.appendChild(this.getInputEl("Fee", e.feeCents.toString())), e.locale && t.appendChild(this.getInputEl("locale", e.locale)), t.appendChild(this.getInputEl("OrderID", e.orderId)), t.appendChild(this.getInputEl("PurchaseTime", String(e.purchaseTime))), e.token && t.appendChild(this.getInputEl("UPCToken", e.token)), t.appendChild(this.getInputEl("TotalAmount", e.totalAmountCents.toString())), (o = this.customer) != null && o.email && t.appendChild(this.getInputEl("email", this.customer.email)), (n = this.customer) != null && n.phoneCountryCode && t.appendChild(this.getInputEl("phoneCountryCode", this.customer.phoneCountryCode)), (s = this.customer) != null && s.phoneNumber && t.appendChild(this.getInputEl("phoneNumber", this.customer.phoneNumber)), (l = this.customer) != null && l.firstName && t.appendChild(this.getInputEl("consumerFirstName", this.customer.firstName)), (a = this.customer) != null && a.lastName && t.appendChild(this.getInputEl("consumerLastName", this.customer.lastName)), t;
   }
   setMessageListener() {
     const e = (i) => {
