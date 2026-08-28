@@ -1,11 +1,11 @@
-const p = "https://ecg.test.upc.ua/dashboard/api/public/merchant-invoices";
+const c = "https://ecg.test.upc.ua/dashboard/api/public/merchant-invoices";
 class u {
   constructor(e) {
     const i = ["PaymentIframe", "PaymentModalIframe", "PaymentPage"];
     e.mode && i.includes(e.mode) ? this.mode = e.mode : this.mode = "PaymentPage", this.validateMerchantData(e.merchant), this.merchant = e.merchant, this.validateCustomerData(e.customer), this.customer = e.customer, this.validateIframeProps(e.iframeProps), this.iframeProps = e.iframeProps;
   }
   pay(e) {
-    var s, l, a, c;
+    var s, l, a, p;
     const i = this.getPaymentForm(e);
     if (this.validatePaymentData(e), this.mode === "PaymentPage") {
       document.body.appendChild(i), i.submit();
@@ -27,7 +27,7 @@ class u {
         m.remove();
       }), (a = m.querySelector("main")) == null || a.appendChild(n), document.body.appendChild(m);
     }
-    (c = n.contentWindow) == null || c.document.body.appendChild(i), i.submit();
+    (p = n.contentWindow) == null || p.document.body.appendChild(i), i.submit();
   }
   async createPaymentByLink(e) {
     this.validateMerchantData(this.merchant), this.validateCreatePaymentByLinkData(e);
@@ -35,15 +35,13 @@ class u {
       header: this.base64Encode('{"alg":"RS256"}'),
       payload: this.base64Encode(JSON.stringify(this.buildPaymentByLinkPayload(e))),
       signature: ""
-    }, t = await fetch(e.url || p, {
+    }, t = await fetch(e.url || c, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(i)
     });
-    if (!t.ok) {
-      const o = await t.text().catch(() => "");
-      throw new Error(`Payment by link request failed: ${t.status} ${o}`.trim());
-    }
+    if (!t.ok)
+      throw new Error(`Payment link request failed: ${t.status}`);
     const r = await t.json();
     if (!r || typeof r.viewResponse != "string")
       throw new Error("Payment by link response is invalid");
