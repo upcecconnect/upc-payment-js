@@ -11,7 +11,7 @@ export interface PaymentByLinkRecipient {
     readonly lastName: string;
     readonly middleName?: string | undefined;
 }
-export interface CreatePaymentByLinkData {
+export interface PaymentByLinkData {
     readonly currencyCode: string;
     readonly recipientCardNumber: string;
     readonly uuid: string;
@@ -27,7 +27,7 @@ export interface CreatePaymentByLinkData {
     readonly invoiceLinkViewType?: string | undefined;
     readonly locale?: string | undefined;
     readonly orderDate?: string | undefined;
-    readonly url?: string | undefined;
+    readonly url: string;
 }
 export interface PaymentByLinkResult {
     readonly url: string;
@@ -73,7 +73,7 @@ interface IUpcPaymentProps {
 }
 interface IUpcPayment extends IUpcPaymentProps {
     pay: (data: PaymentData) => void;
-    createPaymentByLink: (data: CreatePaymentByLinkData) => Promise<PaymentByLinkResult>;
+    createPaymentByLink: (data: PaymentByLinkData) => Promise<PaymentByLinkResult>;
 }
 export declare class UpcPayment implements IUpcPayment {
     readonly mode: "PaymentIframe" | "PaymentModalIframe" | "PaymentPage";
@@ -82,13 +82,13 @@ export declare class UpcPayment implements IUpcPayment {
     readonly iframeProps: IframeProps | undefined;
     constructor(props: IUpcPaymentProps);
     pay(data: PaymentData): void;
-    createPaymentByLink(data: CreatePaymentByLinkData): Promise<PaymentByLinkResult>;
+    createPaymentByLink(data: PaymentByLinkData): Promise<PaymentByLinkResult>;
     private base64Encode;
     private validateMerchantData;
     private validateCustomerData;
     private validateIframeProps;
     private validatePaymentData;
-    private validateCreatePaymentByLinkData;
+    private validatePaymentByLinkData;
     private buildPaymentByLinkPayload;
     private getInputEl;
     private getPaymentForm;

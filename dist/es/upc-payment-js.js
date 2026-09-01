@@ -1,11 +1,10 @@
-const c = "https://ecg.test.upc.ua/dashboard/api/public/merchant-invoices";
-class u {
+class d {
   constructor(e) {
     const i = ["PaymentIframe", "PaymentModalIframe", "PaymentPage"];
     e.mode && i.includes(e.mode) ? this.mode = e.mode : this.mode = "PaymentPage", this.validateMerchantData(e.merchant), this.merchant = e.merchant, this.validateCustomerData(e.customer), this.customer = e.customer, this.validateIframeProps(e.iframeProps), this.iframeProps = e.iframeProps;
   }
   pay(e) {
-    var s, l, a, p;
+    var s, l, a, c;
     const i = this.getPaymentForm(e);
     if (this.validatePaymentData(e), this.mode === "PaymentPage") {
       document.body.appendChild(i), i.submit();
@@ -27,21 +26,27 @@ class u {
         m.remove();
       }), (a = m.querySelector("main")) == null || a.appendChild(n), document.body.appendChild(m);
     }
-    (p = n.contentWindow) == null || p.document.body.appendChild(i), i.submit();
+    (c = n.contentWindow) == null || c.document.body.appendChild(i), i.submit();
   }
   async createPaymentByLink(e) {
-    this.validateMerchantData(this.merchant), this.validateCreatePaymentByLinkData(e);
+    this.validateMerchantData(this.merchant), this.validatePaymentByLinkData(e);
     const i = {
       header: this.base64Encode('{"alg":"RS256"}'),
       payload: this.base64Encode(JSON.stringify(this.buildPaymentByLinkPayload(e))),
       signature: ""
-    }, t = await fetch(e.url || c, {
+    }, t = await fetch(e.url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(i)
     });
-    if (!t.ok)
-      throw new Error(`Payment link request failed: ${t.status}`);
+    if (!t.ok) {
+      let o = "";
+      try {
+        o = await t.text();
+      } catch {
+      }
+      throw new Error(`Payment by link request failed: ${t.status} ${o.slice(0, 500)}`.trim());
+    }
     const r = await t.json();
     if (!r || typeof r.viewResponse != "string")
       throw new Error("Payment by link response is invalid");
@@ -128,18 +133,17 @@ class u {
     if (e.url && typeof e.url != "string")
       throw new Error('Field "payment.url" is invalid');
   }
-  validateCreatePaymentByLinkData(e) {
-    if (typeof e.currencyCode != "string" || !e.currencyCode)
+  validatePaymentByLinkData(e) {
+    var i, t;
+    if (!e.currencyCode || typeof e.currencyCode != "string")
       throw new Error('Field "currencyCode" is required');
-    if (typeof e.recipientCardNumber != "string" || !e.recipientCardNumber)
+    if (!e.recipientCardNumber || typeof e.recipientCardNumber != "string")
       throw new Error('Field "recipientCardNumber" is required');
-    if (typeof e.uuid != "string" || !e.uuid)
+    if (!e.uuid || typeof e.uuid != "string")
       throw new Error('Field "uuid" is required');
-    if (!e.recipient || typeof e.recipient != "object")
-      throw new Error('Field "recipient" is required');
-    if (typeof e.recipient.firstName != "string" || !e.recipient.firstName)
+    if (!((i = e.recipient) != null && i.firstName) || typeof e.recipient.firstName != "string")
       throw new Error('Field "recipient.firstName" is required');
-    if (typeof e.recipient.lastName != "string" || !e.recipient.lastName)
+    if (!((t = e.recipient) != null && t.lastName) || typeof e.recipient.lastName != "string")
       throw new Error('Field "recipient.lastName" is required');
     if (e.recipient.middleName && typeof e.recipient.middleName != "string")
       throw new Error('Field "recipient.middleName" is invalid');
@@ -147,8 +151,6 @@ class u {
       throw new Error('Field "expirationDate" is invalid');
     if (e.locale && typeof e.locale != "string")
       throw new Error('Field "locale" is invalid');
-    if (e.url && typeof e.url != "string")
-      throw new Error('Field "url" is invalid');
   }
   buildPaymentByLinkPayload(e) {
     return {
@@ -303,5 +305,5 @@ class u {
   }
 }
 export {
-  u as UpcPayment
+  d as UpcPayment
 };

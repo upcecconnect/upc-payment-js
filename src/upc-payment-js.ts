@@ -29,7 +29,7 @@ export interface PaymentByLinkRecipient {
   readonly middleName?: string|undefined;
 }
 
-export interface CreatePaymentByLinkData {
+export interface PaymentByLinkData {
   readonly currencyCode: string;
   readonly recipientCardNumber: string;
   readonly uuid: string;
@@ -45,7 +45,7 @@ export interface CreatePaymentByLinkData {
   readonly invoiceLinkViewType?: string|undefined;
   readonly locale?: string|undefined;
   readonly orderDate?: string|undefined;
-  readonly url?: string|undefined;
+  readonly url: string;
 }
 
 export interface PaymentByLinkResult {
@@ -53,8 +53,6 @@ export interface PaymentByLinkResult {
   readonly id: string;
   readonly creationDate: string;
 }
-
-const PAYMENT_BY_LINK_ENDPOINT = 'https://ecg.test.upc.ua/dashboard/api/public/merchant-invoices'; // to discuss
 
 interface IframeProps {
   readonly wrapperSelector?: string|undefined;
@@ -100,7 +98,7 @@ interface IUpcPaymentProps {
 
 interface IUpcPayment extends IUpcPaymentProps {
   pay: (data: PaymentData) => void;
-  createPaymentByLink: (data: CreatePaymentByLinkData) => Promise<PaymentByLinkResult>;
+  createPaymentByLink: (data: PaymentByLinkData) => Promise<PaymentByLinkResult>;
 }
 
 export class UpcPayment implements IUpcPayment {
@@ -168,21 +166,21 @@ export class UpcPayment implements IUpcPayment {
     form.submit();
   }
 
-  public async createPaymentByLink(data: CreatePaymentByLinkData): Promise<PaymentByLinkResult> {
+  public async createPaymentByLink(data: PaymentByLinkData): Promise<PaymentByLinkResult> {
     this.validateMerchantData(this.merchant);
-    this.validateCreatePaymentByLinkData(data);
+    this.validatePaymentByLinkData(data);
     const body = {
       header: this.base64Encode('{"alg":"RS256"}'),
       payload: this.base64Encode(JSON.stringify(this.buildPaymentByLinkPayload(data))),
       signature: '',
     };
-    const response = await fetch(data.url || PAYMENT_BY_LINK_ENDPOINT, {
+    const response = await fetch(data.url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
     if (!response.ok) {
-      throw new Error(`Payment link request failed: ${response.status}`);
+      throw new Error(`Payment by link request failed: ${response.status} ${details}`.trim());
     }
     const json = await response.json();
     if (!json || typeof json.viewResponse !== 'string') {
@@ -307,23 +305,20 @@ export class UpcPayment implements IUpcPayment {
     }
   }
 
-  private validateCreatePaymentByLinkData(data: CreatePaymentByLinkData): void {
-    if (typeof data.currencyCode !== 'string' || !data.currencyCode) {
+  private validatePaymentByLinkData(data: PaymentByLinkData): void {
+    if (!data.currencyCode || typeof data.currencyCode !== 'string') {
       throw new Error('Field "currencyCode" is required');
     }
-    if (typeof data.recipientCardNumber !== 'string' || !data.recipientCardNumber) {
+    if (!data.recipientCardNumber || typeof data.recipientCardNumber !== 'string') {
       throw new Error('Field "recipientCardNumber" is required');
     }
-    if (typeof data.uuid !== 'string' || !data.uuid) {
+    if (!data.uuid || typeof data.uuid !== 'string') {
       throw new Error('Field "uuid" is required');
     }
-    if (!data.recipient || typeof data.recipient !== 'object') {
-      throw new Error('Field "recipient" is required');
-    }
-    if (typeof data.recipient.firstName !== 'string' || !data.recipient.firstName) {
+    if (!data.recipient?.firstName || typeof data.recipient.firstName !== 'string') {
       throw new Error('Field "recipient.firstName" is required');
     }
-    if (typeof data.recipient.lastName !== 'string' || !data.recipient.lastName) {
+    if (!data.recipient?.lastName || typeof data.recipient.lastName !== 'string') {
       throw new Error('Field "recipient.lastName" is required');
     }
     if (data.recipient.middleName && typeof data.recipient.middleName !== 'string') {
@@ -335,12 +330,9 @@ export class UpcPayment implements IUpcPayment {
     if (data.locale && typeof data.locale !== 'string') {
       throw new Error('Field "locale" is invalid');
     }
-    if (data.url && typeof data.url !== 'string') {
-      throw new Error('Field "url" is invalid');
-    }
   }
 
-  private buildPaymentByLinkPayload(data: CreatePaymentByLinkData): Record<string, unknown> {
+  private buildPaymentByLinkPayload(data: PaymentByLinkData): Record<string, unknown> {
     return {
       terminalInfo: {
         merchantId: this.merchant.id,
