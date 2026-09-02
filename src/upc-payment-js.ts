@@ -180,6 +180,7 @@ export class UpcPayment implements IUpcPayment {
       body: JSON.stringify(body),
     });
     if (!response.ok) {
+      const details = (await response.text().catch(() => '')).slice(0, 500);
       throw new Error(`Payment by link request failed: ${response.status} ${details}`.trim());
     }
     const json = await response.json();
@@ -321,7 +322,7 @@ export class UpcPayment implements IUpcPayment {
     if (!data.recipient?.lastName || typeof data.recipient.lastName !== 'string') {
       throw new Error('Field "recipient.lastName" is required');
     }
-    if (data.recipient.middleName && typeof data.recipient.middleName !== 'string') {
+    if (data.recipient?.middleName && typeof data.recipient.middleName !== 'string') {
       throw new Error('Field "recipient.middleName" is invalid');
     }
     if (typeof data.expirationDate !== 'number' || Number.isNaN(data.expirationDate)) {

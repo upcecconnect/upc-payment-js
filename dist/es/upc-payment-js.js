@@ -40,12 +40,8 @@ class d {
       body: JSON.stringify(i)
     });
     if (!t.ok) {
-      let o = "";
-      try {
-        o = await t.text();
-      } catch {
-      }
-      throw new Error(`Payment by link request failed: ${t.status} ${o.slice(0, 500)}`.trim());
+      const o = (await t.text().catch(() => "")).slice(0, 500);
+      throw new Error(`Payment by link request failed: ${t.status} ${o}`.trim());
     }
     const r = await t.json();
     if (!r || typeof r.viewResponse != "string")
@@ -134,7 +130,7 @@ class d {
       throw new Error('Field "payment.url" is invalid');
   }
   validatePaymentByLinkData(e) {
-    var i, t;
+    var i, t, r;
     if (!e.currencyCode || typeof e.currencyCode != "string")
       throw new Error('Field "currencyCode" is required');
     if (!e.recipientCardNumber || typeof e.recipientCardNumber != "string")
@@ -145,7 +141,7 @@ class d {
       throw new Error('Field "recipient.firstName" is required');
     if (!((t = e.recipient) != null && t.lastName) || typeof e.recipient.lastName != "string")
       throw new Error('Field "recipient.lastName" is required');
-    if (e.recipient.middleName && typeof e.recipient.middleName != "string")
+    if ((r = e.recipient) != null && r.middleName && typeof e.recipient.middleName != "string")
       throw new Error('Field "recipient.middleName" is invalid');
     if (typeof e.expirationDate != "number" || Number.isNaN(e.expirationDate))
       throw new Error('Field "expirationDate" is invalid');
