@@ -64,6 +64,42 @@ payment.pay({
 });
 ```
 
+### Generate a payment link (PayMe by link)
+
+Instead of submitting a form, this method sends a request to the endpoint and
+resolves with a payment URL you can share to receive funds.
+
+`url` is required — it is the endpoint that generates the payment link, so you
+pass the one for your environment (test / prod). The method resolves with
+`{ url, id, creationDate }`, where `url` is the payment link to share.
+
+```js
+import { UpcPayment } from 'upc-payment-js';
+
+const payment = new UpcPayment({
+  merchant: {
+    id: '1000027',
+    terminalId: 'E1000027',
+    signature: 'Signature',
+  },
+});
+
+const { url: paymentLink } = await payment.createPaymentByLink({
+  // required: endpoint that generates the payment link
+  url: 'https://<host>/dashboard/api/public/merchant-invoices',
+  currencyCode: '980',
+  recipientCardNumber: '5559490000000007',
+  uuid: 'Card-Uuid-0007-1808-0000',
+  recipient: {
+    firstName: 'Pavlo',
+    lastName: 'Recipient',
+  },
+  expirationDate: 2905,
+});
+
+console.log(paymentLink);
+```
+
 ### OR
 
 Using link:
